@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sand-50: #fcfbf9;
+  --color-sand-100: #f5f3ec;
+  --color-sand-200: #e8e3d6;
+  --color-sand-300: #d6ccb8;
+  --color-sand-400: #c1b194;
+  --color-sand-500: #b09a76;
+  --color-sand-600: #a28661;
+  --color-sand-700: #886d4e;
+  --color-sand-800: #715b43;
+  --color-sand-900: #5c4b38;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #1a1a1a;
+  background-color: var(--color-sand-50);
+}
+
+.hero-image {
+  background-image: url('/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg');
+  background-size: cover;
+  background-position: center 20%;
+}
