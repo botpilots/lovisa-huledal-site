@@ -72,6 +72,42 @@ content:
             label: Role
             type: string
 
+  # PROGRAMMES
+  - name: programmes
+    label: Programmes
+    type: collection
+    path: content/programmes
+    format: json
+    filename: "{title}.json"
+    view:
+      primary: title
+    fields:
+      - name: title
+        type: string
+
+      - name: description
+        type: rich-text
+
+      - name: images
+        label: Images
+        type: image
+        options:
+          multiple: true
+
+      - name: repertoire
+        label: Repertoire
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{composer} - {piece}"
+        fields:
+          - name: composer
+            type: string
+
+          - name: piece
+            type: string
+
   # EVENTS
   - name: events
     label: Events
@@ -102,6 +138,12 @@ content:
 
       - name: link
         type: string
+
+      - name: programme
+        label: Programme
+        type: reference
+        options:
+          collection: programmes
 
   # MEDIA GROUP
   - name: mediaSection
