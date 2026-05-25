@@ -73,7 +73,7 @@ content:
             type: string
 
           - name: role
-            label: Lovisa's Role
+            label: Role
             type: string
 
   # EVENTS
@@ -148,6 +148,7 @@ content:
           delete: false
         fields:
           - name: portraits
+            label: Portraits
             type: object
             list:
               collapsible:
@@ -220,6 +221,7 @@ content:
             type: string
 
       - name: socialMedia
+        label: Social Media
         component: socialMedia
 
 actions:
