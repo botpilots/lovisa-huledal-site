@@ -1,11 +1,156 @@
-media: media
+media:
+  input: public/media
+  output: /media
+
 content:
-  - name: posts
-    label: Posts
-    type: collection
-    path: content/posts
+  # 1. Home page
+  - name: home
+    label: Home Page
+    type: file
+    path: content/home.json
     fields:
       - name: title
+        label: Title
         type: string
-      - name: body
+
+      - name: biography
+        label: Biography
         type: rich-text
+
+  # 2. Repertoire
+  - name: repertoire
+    label: Repertoire
+    type: collection
+    path: content/repertoire
+    filename: "{primary}"
+    fields:
+      - name: type
+        label: Type of Music
+        type: select
+        options:
+          values:
+            - Opera
+            - Chamber
+            - Sacral
+
+      - name: composer
+        label: Composer
+        type: string
+
+      - name: piece
+        label: Piece
+        type: string
+
+      - name: role
+        label: Lovisa's Role
+        type: string
+
+  # 3. Events
+  - name: events
+    label: Events
+    type: collection
+    path: content/events
+    filename: "{date}-{name}"
+    fields:
+      - name: date
+        label: Date
+        type: date
+
+      - name: time
+        label: Time of Day
+        type: string
+
+      - name: name
+        label: Event Name
+        type: string
+
+      - name: description
+        label: Description
+        type: rich-text
+
+      - name: link
+        label: Link
+        type: string
+
+  # 4. Videos
+  - name: videos
+    label: Videos
+    type: collection
+    path: content/videos
+    filename: "{title}"
+    fields:
+      - name: youtubeLink
+        label: YouTube Link
+        type: string
+
+      - name: title
+        label: Title
+        type: string
+
+      - name: description
+        label: Description
+        type: text
+
+  # 5. Photos
+  - name: photos
+    label: Photos
+    type: file
+    path: content/photos.json
+    fields:
+      - name: portraits
+        label: Portraits
+        type: image
+        list: true
+
+      - name: onStage
+        label: On Stage
+        type: image
+        list: true
+
+  # 6. Contact
+  - name: contact
+    label: Contact
+    type: file
+    path: content/contact.json
+    fields:
+      - name: agencyName
+        label: Agency Name
+        type: string
+
+      - name: agencyEmail
+        label: Agency Email
+        type: string
+
+      - name: agencyPhone
+        label: Agency Phone
+        type: string
+
+      - name: lovisaName
+        label: Lovisa Name
+        type: string
+
+      - name: lovisaEmail
+        label: Lovisa Email
+        type: string
+
+      - name: lovisaPhone
+        label: Lovisa Phone
+        type: string
+
+      - name: socialMedia
+        label: Social Media
+        type: object
+        fields:
+          - name: facebook
+            type: string
+
+          - name: instagram
+            type: string
+
+          - name: youtube
+            type: string
+
+actions:
+  - name: deploy-site
+    label: Deploy Site
+    workflow: pages-cms-action.yml
