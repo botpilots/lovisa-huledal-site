@@ -21,40 +21,37 @@ components:
         type: string
 
 content:
-  - name: website
-    label: Website
-    type: group
-    items:
+  # HOME
+  - name: home
+    label: Home
+    type: file
+    path: content/home.json
+    format: json
+    operations:
+      delete: false
+    fields:
+      - name: title
+        type: string
 
-      # 1. HOME
-      - name: home
-        label: Home
-        type: file
-        path: content/home.json
-        format: json
-        operations:
-          delete: false
-        fields:
-          - name: title
-            label: Title
-            type: string
+      - name: biography
+        type: rich-text
 
-          - name: biography
-            label: Biography
-            type: rich-text
-
-      # 2. REPERTOIRE
-      - name: repertoire
+  # REPERTOIRE
+  - name: repertoire
+    label: Repertoire
+    type: file
+    path: content/repertoire.json
+    format: json
+    operations:
+      delete: false
+    fields:
+      - name: entries
         label: Repertoire
-        type: file
-        path: content/repertoire.json
-        format: json
+        type: object
         list:
           collapsible:
             collapsed: true
             summary: "{composer} - {piece}"
-        operations:
-          delete: false
         fields:
           - name: type
             label: Type of Music
@@ -66,158 +63,142 @@ content:
                 - Sacral
 
           - name: composer
-            label: Composer
             type: string
 
           - name: piece
-            label: Piece
             type: string
 
           - name: role
             label: Lovisa's Role
             type: string
 
-      # 3. EVENTS
-      - name: events
-        label: Events
-        type: collection
-        path: content/events
-        format: json
-        filename: "{date}-{name}.json"
-        view:
-          primary: name
-          sort: date
-          order: desc
-        fields:
-          - name: date
-            label: Date
-            type: date
+  # EVENTS
+  - name: events
+    label: Events
+    type: collection
+    path: content/events
+    format: json
+    filename: "{date}-{name}.json"
+    view:
+      primary: name
+      sort: date
+      order: desc
+    fields:
+      - name: date
+        type: date
 
-          - name: time
-            label: Time of Day
+      - name: time
+        label: Time of Day
+        type: string
+
+      - name: name
+        label: Event Name
+        type: string
+
+      - name: description
+        type: rich-text
+
+      - name: link
+        type: string
+
+  # MEDIA GROUP
+  - name: media
+    label: Media
+    type: group
+    path: content
+    items:
+
+      - name: videos
+        label: Videos
+        type: collection
+        path: content/videos
+        format: json
+        filename: "{title}.json"
+        view:
+          primary: title
+        fields:
+          - name: youtubeLink
+            label: YouTube Link
             type: string
 
-          - name: name
-            label: Event Name
+          - name: title
             type: string
 
           - name: description
-            label: Description
-            type: rich-text
+            type: text
 
-          - name: link
-            label: Link
-            type: string
-
-      # 4. MEDIA
-      - name: media
-        label: Media
-        type: group
-        items:
-
-          # VIDEOS
-          - name: videos
-            label: Videos
-            type: collection
-            path: content/videos
-            format: json
-            filename: "{title}.json"
-            view:
-              primary: title
-            fields:
-              - name: youtubeLink
-                label: YouTube Link
-                type: string
-
-              - name: title
-                label: Title
-                type: string
-
-              - name: description
-                label: Description
-                type: text
-
-          # PHOTOS
-          - name: photos
-            label: Photos
-            type: file
-            path: content/photos.json
-            format: json
-            operations:
-              delete: false
-            fields:
-              - name: portraits
-                label: Portraits
-                type: object
-                list:
-                  collapsible:
-                    collapsed: true
-                    summary: "{caption}"
-                fields:
-                  - name: image
-                    type: image
-
-                  - name: caption
-                    type: string
-
-              - name: onStage
-                label: On Stage
-                type: object
-                list:
-                  collapsible:
-                    collapsed: true
-                    summary: "{caption}"
-                fields:
-                  - name: image
-                    type: image
-
-                  - name: caption
-                    type: string
-
-      # 5. CONTACT
-      - name: contact
-        label: Contact
+      - name: photos
+        label: Photos
         type: file
-        path: content/contact.json
+        path: content/photos.json
         format: json
         operations:
           delete: false
         fields:
-          - name: agency
-            label: Agency
+          - name: portraits
             type: object
+            list:
+              collapsible:
+                collapsed: true
+                summary: "{caption}"
             fields:
-              - name: name
-                label: Agency Name
+              - name: image
+                type: image
+
+              - name: caption
                 type: string
 
-              - name: email
-                label: Agency Email
-                type: string
-
-              - name: phone
-                label: Agency Phone
-                type: string
-
-          - name: lovisa
-            label: Lovisa
+          - name: onStage
+            label: On Stage
             type: object
+            list:
+              collapsible:
+                collapsed: true
+                summary: "{caption}"
             fields:
-              - name: name
-                label: Name
+              - name: image
+                type: image
+
+              - name: caption
                 type: string
 
-              - name: email
-                label: Email
-                type: string
+  # CONTACT
+  - name: contact
+    label: Contact
+    type: file
+    path: content/contact.json
+    format: json
+    operations:
+      delete: false
+    fields:
+      - name: agency
+        label: Agency
+        type: object
+        fields:
+          - name: name
+            type: string
 
-              - name: phone
-                label: Phone
-                type: string
+          - name: email
+            type: string
 
-          - name: socialMedia
-            label: Social Media
-            component: socialMedia
+          - name: phone
+            type: string
+
+      - name: lovisa
+        label: Lovisa
+        type: object
+        fields:
+          - name: name
+            type: string
+
+          - name: email
+            type: string
+
+          - name: phone
+            type: string
+
+      - name: socialMedia
+        component: socialMedia
 
 actions:
   - name: deploy-site
