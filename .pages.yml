@@ -81,8 +81,10 @@ content:
     filename: "{date}-{name}.json"
     view:
       primary: name
-      sort: date
-      order: desc
+      sort: [date]
+      default:
+        sort: date
+        order: desc
     fields:
       - name: date
         type: date
@@ -102,10 +104,9 @@ content:
         type: string
 
   # MEDIA GROUP
-  - name: media
+  - name: mediaSection
     label: Media
     type: group
-    path: content
     items:
 
       - name: videos
