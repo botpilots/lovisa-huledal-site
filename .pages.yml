@@ -31,9 +31,11 @@ content:
       delete: false
     fields:
       - name: title
+        label: Title
         type: string
 
       - name: biography
+        label: Biography
         type: rich-text
 
   # REPERTOIRE
@@ -63,9 +65,11 @@ content:
                 - Sacral
 
           - name: composer
+            label: Composer
             type: string
 
           - name: piece
+            label: Piece
             type: string
 
           - name: role
@@ -80,17 +84,19 @@ content:
     format: json
     filename: "{date}-{name}.json"
     view:
+      fields: [date, name, time]
       primary: name
-      sort: [date]
+      sort: [date, name]
       default:
         sort: date
         order: desc
     fields:
       - name: date
+        label: Date
         type: date
 
       - name: time
-        label: Time of Day
+        label: Time
         type: string
 
       - name: name
@@ -98,9 +104,11 @@ content:
         type: string
 
       - name: description
+        label: Description
         type: rich-text
 
       - name: link
+        label: Link
         type: string
 
   # MEDIA GROUP
@@ -116,6 +124,7 @@ content:
         format: json
         filename: "{title}.json"
         view:
+          fields: [title, youtubeLink]
           primary: title
         fields:
           - name: youtubeLink
@@ -123,9 +132,11 @@ content:
             type: string
 
           - name: title
+            label: Title
             type: string
 
           - name: description
+            label: Description
             type: text
 
       - name: photos
@@ -144,9 +155,11 @@ content:
                 summary: "{caption}"
             fields:
               - name: image
+                label: Image
                 type: image
 
               - name: caption
+                label: Caption
                 type: string
 
           - name: onStage
@@ -158,9 +171,11 @@ content:
                 summary: "{caption}"
             fields:
               - name: image
+                label: Image
                 type: image
 
               - name: caption
+                label: Caption
                 type: string
 
   # CONTACT
@@ -177,12 +192,15 @@ content:
         type: object
         fields:
           - name: name
+            label: Name
             type: string
 
           - name: email
+            label: Email
             type: string
 
           - name: phone
+            label: Phone
             type: string
 
       - name: lovisa
@@ -190,12 +208,15 @@ content:
         type: object
         fields:
           - name: name
+            label: Name
             type: string
 
           - name: email
+            label: Email
             type: string
 
           - name: phone
+            label: Phone
             type: string
 
       - name: socialMedia
