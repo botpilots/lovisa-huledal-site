@@ -1,0 +1,53 @@
+{
+  "entries": [
+    {
+      "type": "Opera",
+      "composer": "G. F. Händel",
+      "piece": "Giulio Cesare",
+      "role": "Tolomeo"
+    },
+    {
+      "type": "Opera",
+      "composer": "G. Bizet",
+      "piece": "Carmen",
+      "role": "Mercédès"
+    },
+    {
+      "type": "Opera",
+      "composer": "Verdi",
+      "piece": "Rigoletto",
+      "role": "Maddalena"
+    },
+    {
+      "type": "Opera",
+      "composer": "C. Monteverdi",
+      "piece": "L'incoronazione di Poppea",
+      "role": "Valetto, Virtú"
+    },
+    {
+      "type": "Sacral",
+      "composer": "J. S. Bach",
+      "piece": "Weinhnachtsoratorium"
+    },
+    {
+      "type": "Sacral",
+      "composer": "W. A. Mozart",
+      "piece": "Requiem"
+    },
+    {
+      "type": "Sacral",
+      "composer": "J. S. Bach",
+      "piece": "H-moll messe"
+    },
+    {
+      "type": "Chamber",
+      "composer": "Ylva Fred",
+      "piece": "Kapitel I för mezzosopran"
+    },
+    {
+      "type": "Chamber",
+      "composer": "Clara Schumann",
+      "piece": "Lorelei"
+    }
+  ]
+}
