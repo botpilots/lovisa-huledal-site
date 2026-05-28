@@ -1,0 +1,15 @@
+{
+  "agency": {
+    "name": "Göran Eliasson",
+    "email": "göran@eliasson.se",
+    "phone": "070123456678"
+  },
+  "lovisa": {
+    "email": "lovisa.huledal@gmail.com"
+  },
+  "socialMedia": {
+    "facebook": "https://www.facebook.com/lovisahuledalmezzosoprano/",
+    "instagram": "https://www.instagram.com/lovisahuledal/",
+    "youtube": "https://www.youtube.com/@lovisahuledal"
+  }
+}
