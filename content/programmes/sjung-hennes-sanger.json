@@ -1,7 +1,14 @@
 {
   "title": "Sjung hennes sånger!",
-  "description": "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"\n\n- Lorem ipso\n- Lorem ipso\n- Hofof\n- Jdjd\n- Lolo\n\n\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"",
-  "images": [
-    "/media/20240920-5.jpeg"
+  "description": "**Test:** ingen bild + alla tre flikar (DESCRIPTION, REPERTOIRE, UPCOMING).\n\n\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"\n\n- Lorem ipso\n- Lorem ipso\n- Hofof\n- Jdjd\n- Lolo\n\n\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"",
+  "repertoire": [
+    { "composer": "Alice Tegnér", "piece": "Bäckaslöv" },
+    { "composer": "Lille Bror Söderlundh", "piece": "Jag vet en dejlig rosa" },
+    { "composer": "Monica Dominique", "piece": "Sång till friheten" },
+    { "composer": "Ebba Grön", "piece": "Ung och stolt" },
+    { "composer": "Marie Bergman", "piece": "Ingen vind, ingen våg" },
+    { "composer": "Carola Häggkvist", "piece": "Fångad av en stormvind" },
+    { "composer": "Lena Willemark", "piece": "Näcken polska" },
+    { "composer": "Eva Dahlgren", "piece": "Ängeln i rummet" }
   ]
 }

@@ -123,14 +123,40 @@ content:
       - name: title
         type: string
 
+      - name: headerColor
+        label: Header colour
+        description: Optional. Background for the title band (or full media area when there is no image). Leave empty to use the next sand tone from the site theme — each programme gets a different colour until the palette cycles.
+        type: color
+
       - name: description
         type: rich-text
 
       - name: images
         label: Images
-        type: image
-        options:
-          multiple: true
+        description: Order in the list is the default sequence. Visitors can step through with arrows on the programme image.
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "Image {index}"
+        fields:
+          - name: image
+            label: Image
+            type: image
+
+          - name: offsetX
+            label: Horizontal focus (%) (left = 0, right = 100)
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical focus (%) (higher = lower)
+            type: number
+            options:
+              min: 0
+              max: 100
 
       - name: repertoire
         label: Repertoire
