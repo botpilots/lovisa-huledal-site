@@ -57,14 +57,14 @@ content:
             type: image
 
           - name: offsetX
-            label: Horizontal focus (%)
+            label: Horizontal focus (%) (left = 0, right = 100)
             type: number
             options:
               min: 0
               max: 100
 
           - name: offsetY
-            label: Vertical focus (%)
+            label: Vertical focus (%) (higher = lower)
             type: number
             options:
               min: 0
