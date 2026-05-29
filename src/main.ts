@@ -2,30 +2,26 @@ import './style.css'
 import { animateAboutLayout } from './about-layout-animation'
 import { marked } from 'marked'
 import home from '../content/home.json'
-import photos from '../content/photos.json'
 
 type Language = 'sv' | 'en'
+
+interface MosaicImage {
+  image: string
+  offsetX?: number
+  offsetY?: number
+  alt?: string
+}
 
 interface HomeContent {
   biography: string
   biographyEn: string
-}
-
-interface PhotoEntry {
-  image: string
-  caption?: string
-}
-
-interface PhotosContent {
-  portraits: PhotoEntry[]
-  onStage: PhotoEntry[]
+  aboutMosaic: MosaicImage[]
 }
 
 const BIOGRAPHY_PROSE =
   'biography-prose text-lg font-light leading-relaxed text-gray-600 [&_h5]:text-lg [&_h5]:font-normal [&_h5]:text-gray-900 [&_h5]:mb-6 [&_p]:mb-6 [&_p:last-child]:mb-0 [&_em]:italic'
 
 const content = home as HomeContent
-const photoContent = photos as PhotosContent
 
 let language: Language = 'sv'
 let aboutExpanded = false
@@ -47,10 +43,14 @@ function splitBiography(markdown: string) {
   }
 }
 
-function getMosaicImages(): PhotoEntry[] {
-  const portraits = photoContent.portraits.slice(0, 3)
-  const stage = photoContent.onStage[0]
-  return stage ? [...portraits, stage] : [...portraits, photoContent.portraits[3]].filter(Boolean)
+function getMosaicImages(): MosaicImage[] {
+  return (content.aboutMosaic ?? []).slice(0, 4)
+}
+
+function mosaicObjectPosition(photo: MosaicImage): string {
+  const x = photo.offsetX ?? 50
+  const y = photo.offsetY ?? 50
+  return `object-position: ${x}% ${y}%`
 }
 
 function readMoreLabel() {
@@ -60,24 +60,24 @@ function readMoreLabel() {
 function renderMosaic(): string {
   const [hero, topRight, bottomRight, bottomWide] = getMosaicImages()
 
-  const cell = (photo: PhotoEntry | undefined, alt: string) => {
-    if (!photo) return ''
-    return `<img src="${photo.image}" alt="${alt}" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />`
+  const cell = (photo: MosaicImage | undefined) => {
+    if (!photo?.image) return ''
+    return `<img src="${photo.image}" alt="${photo.alt ?? ''}" style="${mosaicObjectPosition(photo)}" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />`
   }
 
   return `
     <div class="about-mosaic-grid">
       <div class="about-mosaic-cell about-mosaic-cell--hero">
-        ${cell(hero, hero?.caption ?? '')}
+        ${cell(hero)}
       </div>
       <div class="about-mosaic-cell about-mosaic-cell--top-right">
-        ${cell(topRight, topRight?.caption ?? '')}
+        ${cell(topRight)}
       </div>
       <div class="about-mosaic-cell about-mosaic-cell--bottom-right">
-        ${cell(bottomRight, bottomRight?.caption ?? '')}
+        ${cell(bottomRight)}
       </div>
       <div class="about-mosaic-cell about-mosaic-cell--bottom-wide">
-        ${cell(bottomWide, bottomWide?.caption ?? '')}
+        ${cell(bottomWide)}
       </div>
     </div>
   `
