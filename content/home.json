@@ -3,25 +3,25 @@
     {
       "image": "/media/img9089r.jpeg",
       "offsetX": 50,
-      "offsetY": 50,
+      "offsetY": 25,
       "alt": "Photo: Julia Bovallius"
     },
     {
       "image": "/media/jolo-mb-3956.jpeg",
       "offsetX": 50,
-      "offsetY": 50,
+      "offsetY": 0,
       "alt": "Photo: Mats Bäcker"
     },
     {
       "image": "/media/jolo-mb-3982-2.jpeg",
-      "offsetX": 50,
+      "offsetX": 25,
       "offsetY": 50,
       "alt": "Photo: Mats Bäcker"
     },
     {
       "image": "/media/14-lovisa-huledal-sjungande-framfor-orkester.jpeg",
       "offsetX": 50,
-      "offsetY": 35,
+      "offsetY": 45,
       "alt": ""
     }
   ],
