@@ -89,7 +89,8 @@ const BIOGRAPHY_PROSE =
   'biography-prose text-lg font-light leading-relaxed text-gray-600 [&_h5]:text-lg [&_h5]:font-normal [&_h5]:text-gray-900 [&_h5]:mb-6 [&_p]:mb-6 [&_p:last-child]:mb-0 [&_em]:italic [&_ul]:mb-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2'
 
 const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-10 lg:grid-cols-2 lg:items-start lg:gap-10'
-const PROGRAMME_MEDIA_STACK = 'flex min-h-72 flex-col overflow-hidden lg:min-h-[32rem]'
+const PROGRAMME_MEDIA_STACK = 'programme-media-stack'
+const PROGRAMME_MEDIA_STACK_WITH_IMAGE = 'programme-media-stack programme-media-stack--with-carousel'
 const PROGRAMME_TAB_BASE =
   'justify-self-center w-fit cursor-pointer select-none text-sm tracking-widest transition-colors'
 const PROGRAMME_TAB_ACTIVE = 'text-gray-900 border-b border-gray-900'
@@ -505,15 +506,15 @@ function renderProgrammeMedia(programme: Programme, index: number, headerColor: 
   const images = getProgrammeImages(programme)
 
   const titleBlock = `
-    <p class="mb-2 text-xs font-normal tracking-[0.25em] text-white/80">PROGRAMME</p>
-    <h3 class="text-2xl font-light tracking-wide text-white md:text-3xl">${programme.title}</h3>
+    <p class="mb-1 text-xs font-normal tracking-[0.25em] text-white/80 md:mb-2">PROGRAMME</p>
+    <h3 class="text-xl font-light leading-tight tracking-wide text-white md:text-3xl">${programme.title}</h3>
   `
 
   if (!images.length) {
     return `
       <div data-programme-media class="min-w-0 ${media}">
         <div class="${PROGRAMME_MEDIA_STACK}" style="${bgStyle}">
-          <header class="flex flex-1 flex-col items-center justify-center px-6 py-12 text-center">
+          <header class="programme-media-header flex flex-1 flex-col items-center justify-center px-4 py-8 text-center md:px-6 md:py-12">
             ${titleBlock}
           </header>
         </div>
@@ -523,8 +524,8 @@ function renderProgrammeMedia(programme: Programme, index: number, headerColor: 
 
   return `
     <div data-programme-media class="min-w-0 ${media}">
-      <div class="${PROGRAMME_MEDIA_STACK}">
-        <header class="shrink-0 border-b-2 border-white px-6 py-6 ${titleAlign}" style="${bgStyle}">
+      <div class="${PROGRAMME_MEDIA_STACK_WITH_IMAGE}">
+        <header class="programme-media-header shrink-0 border-b-2 border-white px-4 py-2.5 ${titleAlign} md:px-6 md:py-6" style="${bgStyle}">
           ${titleBlock}
         </header>
         ${renderProgrammeCarousel(images)}
