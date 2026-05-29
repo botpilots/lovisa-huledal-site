@@ -1,6 +1,5 @@
 import './style.css'
 import { animateAboutLayout } from './about-layout-animation'
-import { animateProgrammeTabFade } from './programme-tab-animation'
 import { marked } from 'marked'
 import home from '../content/home.json'
 
@@ -91,10 +90,10 @@ const BIOGRAPHY_PROSE =
 
 const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-10 lg:grid-cols-2 lg:items-start lg:gap-10'
 const PROGRAMME_MEDIA_STACK = 'flex min-h-72 flex-col overflow-hidden lg:min-h-[32rem]'
-const PROGRAMME_TAB_ACTIVE =
-  'cursor-pointer select-none text-gray-900 border-b border-gray-900 transition-colors'
-const PROGRAMME_TAB_INACTIVE =
-  'cursor-pointer select-none text-gray-400 transition-colors hover:text-gray-600'
+const PROGRAMME_TAB_BASE =
+  'justify-self-center w-fit cursor-pointer select-none text-sm tracking-widest transition-colors'
+const PROGRAMME_TAB_ACTIVE = 'text-gray-900 border-b border-gray-900'
+const PROGRAMME_TAB_INACTIVE = 'text-gray-400 hover:text-gray-600'
 
 type ProgrammeTab = 'description' | 'repertoire' | 'upcoming'
 const EVENT_DATE_FORMAT = new Intl.DateTimeFormat('sv-SE', {
@@ -334,7 +333,7 @@ function renderProgrammeRepertoirePanel(entries: ProgrammeRepertoireEntry[]): st
       (entry) => `
         <li class="break-inside-avoid">
           <span class="text-gray-900">${entry.composer}</span>
-          <span class="text-gray-600"> — ${entry.piece}</span>
+          <span class="text-gray-600"> — <span class="italic">${entry.piece}</span></span>
         </li>
       `,
     )
@@ -343,57 +342,94 @@ function renderProgrammeRepertoirePanel(entries: ProgrammeRepertoireEntry[]): st
   return `<ul class="grid gap-x-10 gap-y-2 text-base font-light leading-relaxed md:grid-cols-2">${items}</ul>`
 }
 
+function renderExternalLinkIcon(): string {
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  `
+}
+
+function renderProgrammeUpcomingEventLabel(event: Event): string {
+  const name = `<span class="text-gray-900">${event.name}</span>`
+  if (!event.link) return name
+
+  return `
+    <span class="inline-flex min-w-0 items-center">
+      ${name}
+      <a
+        href="${event.link}"
+        class="ml-2.5 shrink-0 text-sand-700 transition-colors hover:text-gray-900"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open ${event.name} (opens in new tab)"
+      >
+        ${renderExternalLinkIcon()}
+      </a>
+    </span>
+  `
+}
+
 function renderProgrammeUpcomingPanel(programmePath: string): string {
   const events = eventsForProgramme(programmePath)
 
   const items = events
-    .map((event) => {
-      const label = event.link
-        ? `<a href="${event.link}" class="text-gray-900 underline decoration-sand-400 underline-offset-4 transition-colors hover:text-sand-800" target="_blank" rel="noopener noreferrer">${event.name}</a>`
-        : `<span class="text-gray-900">${event.name}</span>`
-
-      return `
-        <li class="flex flex-col gap-0.5 sm:flex-row sm:gap-3">
-          <time datetime="${event.date}" class="shrink-0 text-sm tracking-wide text-sand-700">${formatEventWhen(event)}</time>
-          <span class="hidden text-sand-400 sm:inline" aria-hidden="true">—</span>
-          ${label}
+    .map(
+      (event) => `
+        <li class="contents">
+          <time datetime="${event.date}" class="tracking-wide text-sand-800">${formatEventWhen(event)}</time>
+          <span class="text-center text-sand-400" aria-hidden="true">—</span>
+          <span class="min-w-0">${renderProgrammeUpcomingEventLabel(event)}</span>
         </li>
-      `
-    })
+      `,
+    )
     .join('')
 
   return `
-    <ul class="space-y-4 text-base font-light leading-relaxed">${items}</ul>
-    <a
-      href="#schedule"
-      class="mt-6 inline-block text-sm tracking-widest text-sand-700 underline decoration-sand-300 underline-offset-4 transition-colors hover:text-gray-900"
+    <ul
+      class="programme-upcoming grid w-full gap-x-6 gap-y-4 text-base font-light leading-relaxed [grid-template-columns:max-content_auto_minmax(0,1fr)] items-center"
     >
-      View full schedule
-    </a>
+      ${items}
+    </ul>
   `
 }
 
 function programmeTabButtonClass(tab: ProgrammeTab, active: ProgrammeTab): string {
-  return tab === active ? PROGRAMME_TAB_ACTIVE : PROGRAMME_TAB_INACTIVE
+  const state = tab === active ? PROGRAMME_TAB_ACTIVE : PROGRAMME_TAB_INACTIVE
+  return `${PROGRAMME_TAB_BASE} ${state}`
 }
 
-const PROGRAMME_TAB_LABELS: Record<ProgrammeTab, string> = {
+const PROGRAMME_TAB_LABELS: Record<Exclude<ProgrammeTab, 'upcoming'>, string> = {
   description: 'DESCRIPTION',
   repertoire: 'REPERTOIRE',
-  upcoming: 'UPCOMING',
 }
 
-function renderProgrammeTabs(available: ProgrammeTab[], active: ProgrammeTab): string {
+function programmeTabLabel(tab: ProgrammeTab, programmePath: string): string {
+  if (tab === 'upcoming') {
+    const count = eventsForProgramme(programmePath).length
+    return count > 0 ? `UPCOMING (${count})` : 'UPCOMING'
+  }
+  return PROGRAMME_TAB_LABELS[tab]
+}
+
+function renderProgrammeTabs(
+  available: ProgrammeTab[],
+  active: ProgrammeTab,
+  programmePath: string,
+): string {
   return available
     .map(
       (id) => `
         <button
           type="button"
           data-programme-tab="${id}"
-          class="flex-1 px-6 py-3 text-center ${programmeTabButtonClass(id, active)}"
+          class="${programmeTabButtonClass(id, active)}"
+          role="tab"
           aria-selected="${id === active}"
         >
-          ${PROGRAMME_TAB_LABELS[id]}
+          ${programmeTabLabel(id, programmePath)}
         </button>
       `,
     )
@@ -411,8 +447,12 @@ function renderProgrammeCopyColumn(
 
   const tabsMarkup = showTabs
     ? `
-        <div class="mb-8 flex w-full shrink-0 items-center justify-center gap-10 px-6 py-4 text-sm tracking-widest">
-          ${renderProgrammeTabs(available, active)}
+        <div
+          class="programme-tabs mb-8 grid w-full shrink-0 py-4"
+          role="tablist"
+          style="grid-template-columns: repeat(${available.length}, minmax(0, 1fr))"
+        >
+          ${renderProgrammeTabs(available, active, programmePath)}
         </div>
       `
     : ''
@@ -677,15 +717,7 @@ function bindProgrammeTabs(): void {
       button.addEventListener('click', () => {
         const tab = button.dataset.programmeTab as ProgrammeTab | undefined
         if (!tab || root.dataset.activeTab === tab) return
-
-        const panelArea = root.querySelector<HTMLElement>('.programme-panels')
-        if (!panelArea) return
-
-        const apply = () => applyProgrammeTab(root, tab)
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-        if (reducedMotion) apply()
-        else void animateProgrammeTabFade(panelArea, apply)
+        applyProgrammeTab(root, tab)
       })
     })
   })
