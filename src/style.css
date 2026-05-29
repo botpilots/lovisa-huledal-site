@@ -24,3 +24,186 @@ body {
   background-size: cover;
   background-position: center 20%;
 }
+
+/* About: mosaic + text side-by-side → image row header + text below (motion via FLIP in JS) */
+.about-text-flow {
+  --about-col-gap: 2.5rem;
+  --about-duration: 1.1s;
+  --about-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  display: grid;
+  gap: var(--about-col-gap);
+}
+
+.about-mosaic {
+  min-width: 0;
+}
+
+.about-copy {
+  min-width: 0;
+}
+
+.about-mosaic-grid {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+  min-height: 18rem;
+  transition: min-height var(--about-duration) var(--about-ease);
+}
+
+.about-mosaic-cell {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  background-color: var(--color-sand-200);
+}
+
+.about-bio.about-is-animating .about-mosaic-cell {
+  z-index: 1;
+}
+
+.about-bio.about-is-animating .about-text-flow,
+.about-bio.about-is-animating .about-mosaic {
+  overflow: visible;
+}
+
+/* Collapsed: mosaic collage (left column on desktop) */
+.about-bio:not([data-expanded='true']) .about-mosaic-grid {
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+}
+
+.about-bio:not([data-expanded='true']) .about-mosaic-cell--hero {
+  grid-column: 1 / 8;
+  grid-row: 1 / 6;
+}
+
+.about-bio:not([data-expanded='true']) .about-mosaic-cell--top-right {
+  grid-column: 8 / 13;
+  grid-row: 1 / 4;
+}
+
+.about-bio:not([data-expanded='true']) .about-mosaic-cell--bottom-right {
+  grid-column: 8 / 13;
+  grid-row: 4 / 9;
+}
+
+.about-bio:not([data-expanded='true']) .about-mosaic-cell--bottom-wide {
+  grid-column: 1 / 8;
+  grid-row: 6 / 9;
+}
+
+.about-rest {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--about-duration) var(--about-ease);
+}
+
+.about-bio[data-expanded='true'] .about-rest {
+  grid-template-rows: 1fr;
+}
+
+.about-rest-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .about-bio:not([data-expanded='true']) .about-text-flow {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+
+  .about-bio:not([data-expanded='true']) .about-mosaic {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .about-bio:not([data-expanded='true']) .about-copy {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .about-bio:not([data-expanded='true']) .about-mosaic-grid {
+    min-height: 32rem;
+  }
+
+  .about-bio[data-expanded='true'] .about-text-flow {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .about-bio[data-expanded='true'] .about-mosaic {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .about-bio[data-expanded='true'] .about-copy {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  /* Expanded desktop: four images in one row above the text */
+  .about-bio[data-expanded='true'] .about-mosaic-grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: minmax(10rem, 14vw);
+    min-height: 0;
+  }
+
+  .about-bio[data-expanded='true'] .about-mosaic-cell--hero {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .about-bio[data-expanded='true'] .about-mosaic-cell--top-right {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .about-bio[data-expanded='true'] .about-mosaic-cell--bottom-right {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .about-bio[data-expanded='true'] .about-mosaic-cell--bottom-wide {
+    grid-column: 4;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 1023px) {
+  .about-text-flow {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .about-mosaic,
+  .about-copy {
+    grid-column: 1;
+  }
+
+  .about-bio:not([data-expanded='true']) .about-mosaic {
+    grid-row: 1;
+  }
+
+  .about-bio:not([data-expanded='true']) .about-copy {
+    grid-row: 2;
+  }
+
+  .about-bio[data-expanded='true'] .about-mosaic {
+    grid-row: 1;
+  }
+
+  .about-bio[data-expanded='true'] .about-copy {
+    grid-row: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-rest {
+    transition: none;
+  }
+
+  .about-bio[data-expanded='true'] .about-rest {
+    grid-template-rows: 1fr;
+  }
+}

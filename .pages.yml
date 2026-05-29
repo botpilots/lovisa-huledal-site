@@ -41,6 +41,39 @@ content:
         label: Biography (English)
         type: rich-text
 
+      - name: aboutMosaic
+        label: About mosaic
+        description: Four images in order — large left, top right, bottom right, wide bottom.
+        type: object
+        list:
+          min: 4
+          max: 4
+          collapsible:
+            collapsed: true
+            summary: "Image {index}"
+        fields:
+          - name: image
+            label: Image
+            type: image
+
+          - name: offsetX
+            label: Horizontal focus (%)
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical focus (%)
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: alt
+            label: Alt text
+            type: string
+
   # REPERTOIRE
   - name: repertoire
     label: Repertoire
