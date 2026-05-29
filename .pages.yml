@@ -123,14 +123,40 @@ content:
       - name: title
         type: string
 
+      - name: headerColor
+        label: Header colour
+        description: Optional. Background for the title band (or full media area when there is no image). Leave empty to use the next sand tone from the site theme — each programme gets a different colour until the palette cycles.
+        type: color
+
       - name: description
         type: rich-text
 
       - name: images
         label: Images
-        type: image
-        options:
-          multiple: true
+        description: Order in the list is the default sequence. Visitors can step through with arrows on the programme image.
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "Image {index}"
+        fields:
+          - name: image
+            label: Image
+            type: image
+
+          - name: offsetX
+            label: Horizontal focus (%) (left = 0, right = 100)
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical focus (%) (higher = lower)
+            type: number
+            options:
+              min: 0
+              max: 100
 
       - name: repertoire
         label: Repertoire
@@ -160,6 +186,11 @@ content:
         sort: date
         order: desc
     fields:
+      - name: id
+        label: Event ID
+        description: Optional. Used for schedule links (e.g. #schedule-event-my-id). If empty, the filename is used (e.g. 2026-07-30-la-liberazione).
+        type: string
+
       - name: date
         type: date
 
@@ -168,7 +199,14 @@ content:
         type: string
 
       - name: name
-        label: Event Name
+        label: Event / performance name
+        description: Optional. If empty, the linked programme title is shown. If set, the programme title appears in parentheses after the name on the website.
+        type: string
+        required: false
+
+      - name: location
+        label: Location
+        description: Venue or place, e.g. Båstad Kyrka, Confidencen.
         type: string
 
       - name: description
