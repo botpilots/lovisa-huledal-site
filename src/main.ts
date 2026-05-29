@@ -54,16 +54,35 @@ interface ProgrammeEntry {
 }
 
 interface Event {
+  /** Optional stable id for schedule anchors; defaults to the event filename (without .json). */
+  id?: string
   date: string
   time?: string
-  name: string
+  name?: string
+  location?: string
   description?: string
   link?: string
   programme?: string
 }
 
+interface EventEntry {
+  /** Same as `id` on the JSON file, or derived from filename e.g. `2026-07-30-la-liberazione`. */
+  id: string
+  path: string
+  event: Event
+}
+
 function cmsPathFromGlob(filePath: string): string {
   return filePath.replace(/^\.\.\//, '')
+}
+
+function eventIdFromGlob(filePath: string): string {
+  const base = filePath.split('/').pop() ?? filePath
+  return base.replace(/\.json$/i, '')
+}
+
+function scheduleEventDomId(eventId: string): string {
+  return `schedule-event-${eventId}`
 }
 
 const programmeModules = import.meta.glob<Programme>('../content/programmes/*.json', {
@@ -83,7 +102,20 @@ const eventModules = import.meta.glob<Event>('../content/events/*.json', {
   import: 'default',
 })
 
-const allEvents: Event[] = Object.values(eventModules)
+const eventEntries: EventEntry[] = Object.entries(eventModules)
+  .map(([filePath, event]) => {
+    const id = event.id?.trim() || eventIdFromGlob(filePath)
+    return {
+      id,
+      path: cmsPathFromGlob(filePath),
+      event,
+    }
+  })
+  .sort(
+    (a, b) =>
+      a.event.date.localeCompare(b.event.date) ||
+      (a.event.time ?? '').localeCompare(b.event.time ?? ''),
+  )
 
 const BIOGRAPHY_PROSE =
   'biography-prose text-lg font-light leading-relaxed text-gray-600 [&_h5]:text-lg [&_h5]:font-normal [&_h5]:text-gray-900 [&_h5]:mb-6 [&_p]:mb-6 [&_p:last-child]:mb-0 [&_em]:italic [&_ul]:mb-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2'
@@ -96,7 +128,10 @@ const PROGRAMME_TAB_BASE =
 const PROGRAMME_TAB_ACTIVE = 'text-gray-900 border-b border-gray-900'
 const PROGRAMME_TAB_INACTIVE = 'text-gray-400 hover:text-gray-600'
 
-type ProgrammeTab = 'description' | 'repertoire' | 'upcoming'
+type ProgrammeTab = 'description' | 'repertoire'
+
+const SCHEDULE_SCROLL_OFFSET_PX = 96
+const SCHEDULE_HIGHLIGHT_MS = 3200
 const EVENT_DATE_FORMAT = new Intl.DateTimeFormat('sv-SE', {
   day: 'numeric',
   month: 'long',
@@ -147,17 +182,65 @@ function renderMarkdown(markdown: string): string {
   return blocks.map((block) => marked.parse(block, { async: false }) as string).join('')
 }
 
-function isUpcomingEvent(event: Event): boolean {
-  const eventDay = new Date(`${event.date}T00:00:00`)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return eventDay >= today
+function parseEventTime(time?: string): { hours: number; minutes: number } | null {
+  if (!time?.trim()) return null
+  const normalized = time.trim().replace('.', ':')
+  const match = normalized.match(/^(\d{1,2}):(\d{2})$/)
+  if (!match) return null
+  return { hours: Number(match[1]), minutes: Number(match[2]) }
 }
 
-function eventsForProgramme(programmePath: string): Event[] {
-  return allEvents
-    .filter((event) => event.programme === programmePath && isUpcomingEvent(event))
-    .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
+/** When `time` is omitted, the event counts as upcoming until the end of that calendar day. */
+function eventStartsAt(event: Event): Date {
+  const start = new Date(`${event.date}T00:00:00`)
+  const parsed = parseEventTime(event.time)
+  if (parsed) {
+    start.setHours(parsed.hours, parsed.minutes, 0, 0)
+    return start
+  }
+  start.setHours(23, 59, 59, 999)
+  return start
+}
+
+function isUpcomingEvent(event: Event): boolean {
+  return eventStartsAt(event) >= new Date()
+}
+
+function isPriorEvent(event: Event): boolean {
+  return !isUpcomingEvent(event)
+}
+
+function upcomingEvents(): EventEntry[] {
+  return eventEntries.filter((entry) => isUpcomingEvent(entry.event))
+}
+
+function priorEvents(): EventEntry[] {
+  return eventEntries
+    .filter((entry) => isPriorEvent(entry.event))
+    .sort(
+      (a, b) =>
+        b.event.date.localeCompare(a.event.date) ||
+        (b.event.time ?? '').localeCompare(a.event.time ?? ''),
+    )
+}
+
+function eventsForProgramme(programmePath: string): EventEntry[] {
+  return upcomingEvents().filter((entry) => entry.event.programme === programmePath)
+}
+
+function programmeTitleForPath(programmePath: string): string | undefined {
+  return programmeEntries.find((entry) => entry.path === programmePath)?.programme.title
+}
+
+/** Name, or programme title; with programme in parentheses when both are set. */
+function scheduleEventDisplayTitle(event: Event): string {
+  const name = event.name?.trim()
+  const programmeTitle = event.programme ? programmeTitleForPath(event.programme) : undefined
+
+  if (name && programmeTitle) return `${name} (${programmeTitle})`
+  if (name) return name
+  if (programmeTitle) return programmeTitle
+  return 'Performance'
 }
 
 function formatEventWhen(event: Event): string {
@@ -321,10 +404,9 @@ function renderProgrammeCarousel(images: ProgrammeImage[]): string {
   `
 }
 
-function programmeAvailableTabs(programme: Programme, programmePath: string): ProgrammeTab[] {
+function programmeAvailableTabs(programme: Programme): ProgrammeTab[] {
   const tabs: ProgrammeTab[] = ['description']
   if (programme.repertoire?.length) tabs.push('repertoire')
-  if (eventsForProgramme(programmePath).length) tabs.push('upcoming')
   return tabs
 }
 
@@ -343,9 +425,9 @@ function renderProgrammeRepertoirePanel(entries: ProgrammeRepertoireEntry[]): st
   return `<ul class="grid gap-x-10 gap-y-2 text-base font-light leading-relaxed md:grid-cols-2">${items}</ul>`
 }
 
-function renderExternalLinkIcon(): string {
+function renderExternalLinkIcon(size = 16): string {
   return `
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
@@ -353,73 +435,220 @@ function renderExternalLinkIcon(): string {
   `
 }
 
-function renderProgrammeUpcomingEventLabel(event: Event): string {
-  const name = `<span class="text-gray-900">${event.name}</span>`
-  if (!event.link) return name
+function renderEventTicketsLink(event: Event): string {
+  if (!event.link) return ''
 
   return `
-    <span class="inline-flex min-w-0 items-center">
-      ${name}
-      <a
-        href="${event.link}"
-        class="ml-2.5 shrink-0 text-sand-700 transition-colors hover:text-gray-900"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Open ${event.name} (opens in new tab)"
-      >
-        ${renderExternalLinkIcon()}
-      </a>
+    <a
+      href="${event.link}"
+      class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sand-400/90 bg-sand-100/90 px-3 py-1 text-xs tracking-widest text-sand-800 transition-colors hover:border-sand-600 hover:bg-sand-200 hover:text-gray-900"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Tickets for ${scheduleEventDisplayTitle(event)} (opens in new tab)"
+    >
+      TICKETS
+      ${renderExternalLinkIcon(14)}
+    </a>
+  `
+}
+
+function renderScheduleEventDetails(event: Event): string {
+  const title = `<span class="text-gray-900">${scheduleEventDisplayTitle(event)}</span>`
+  const locationText = event.location?.trim()
+
+  const locationRow = locationText
+    ? `<span class="mt-1 block text-base text-gray-500">${locationText}</span>`
+    : ''
+
+  return `
+    <span class="block min-w-0">
+      ${title}
+      ${locationRow}
     </span>
   `
 }
 
-function renderProgrammeUpcomingPanel(programmePath: string): string {
-  const events = eventsForProgramme(programmePath)
-
-  const items = events
-    .map(
-      (event) => `
-        <li class="contents">
-          <time datetime="${event.date}" class="tracking-wide text-sand-800">${formatEventWhen(event)}</time>
-          <span class="text-center text-sand-400" aria-hidden="true">—</span>
-          <span class="min-w-0">${renderProgrammeUpcomingEventLabel(event)}</span>
-        </li>
-      `,
-    )
-    .join('')
+function renderScheduleEventRow(entry: EventEntry): string {
+  const { event, id } = entry
+  const programmePath = event.programme ?? ''
+  const tickets = renderEventTicketsLink(event)
 
   return `
-    <ul
-      class="programme-upcoming grid w-full gap-x-6 gap-y-4 text-base font-light leading-relaxed [grid-template-columns:max-content_auto_minmax(0,1fr)] items-center"
+    <li
+      id="${scheduleEventDomId(id)}"
+      data-schedule-event
+      data-event-id="${id}"
+      data-programme-path="${programmePath}"
+      class="schedule-event rounded-sm py-4 md:py-5"
     >
-      ${items}
-    </ul>
+      <div class="schedule-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 text-lg font-light leading-relaxed md:gap-x-10">
+        <div class="flex flex-col items-end gap-y-2">
+          <time datetime="${event.date}" class="text-right tracking-wide text-sand-800">${formatEventWhen(event)}</time>
+          ${tickets ? `<span class="flex justify-end">${tickets}</span>` : ''}
+        </div>
+        <span class="self-center text-sand-400" aria-hidden="true">—</span>
+        <span class="min-w-0 text-left">
+          ${renderScheduleEventDetails(event)}
+        </span>
+      </div>
+    </li>
   `
 }
 
-function programmeTabButtonClass(tab: ProgrammeTab, active: ProgrammeTab): string {
-  const state = tab === active ? PROGRAMME_TAB_ACTIVE : PROGRAMME_TAB_INACTIVE
-  return `${PROGRAMME_TAB_BASE} ${state}`
+function renderScheduleEventList(entries: EventEntry[], emptyMessage: string): string {
+  if (!entries.length) {
+    return `<p class="py-8 text-center text-base font-light text-gray-500">${emptyMessage}</p>`
+  }
+
+  return `<ul class="schedule-list divide-y divide-sand-200/80">${entries.map((entry) => renderScheduleEventRow(entry)).join('')}</ul>`
 }
 
-const PROGRAMME_TAB_LABELS: Record<Exclude<ProgrammeTab, 'upcoming'>, string> = {
+function renderScheduleTabs(active: ScheduleTab): string {
+  const tabs: ScheduleTab[] = ['upcoming', 'prior']
+  return tabs
+    .map(
+      (id) => `
+        <button
+          type="button"
+          data-schedule-tab="${id}"
+          class="${scheduleTabButtonClass(id, active)}"
+          role="tab"
+          aria-selected="${id === active}"
+        >
+          ${SCHEDULE_TAB_LABELS[id]}
+        </button>
+      `,
+    )
+    .join('')
+}
+
+function renderScheduleSection(): string {
+  const upcoming = upcomingEvents()
+  const prior = priorEvents()
+  const hasAny = upcoming.length > 0 || prior.length > 0
+  const active: ScheduleTab = 'upcoming'
+
+  if (!hasAny) {
+    return `
+      <section id="schedule" class="bg-sand-50 px-6 py-32">
+        <div class="mx-auto max-w-4xl text-center">
+          <h2 class="mb-8 text-3xl font-light tracking-widest text-gray-900">SCHEDULE</h2>
+          <p class="text-lg font-light leading-relaxed text-gray-600">
+            No performances listed at the moment.
+          </p>
+        </div>
+      </section>
+    `
+  }
+
+  return `
+    <section id="schedule" class="bg-sand-50 px-6 py-32">
+      <div class="mx-auto max-w-5xl">
+        <h2 class="mb-12 text-center text-3xl font-light tracking-widest text-gray-900">SCHEDULE</h2>
+        <div data-schedule-root data-active-tab="${active}">
+          <div
+            class="programme-tabs mb-8 grid w-full max-w-md mx-auto shrink-0 py-4"
+            role="tablist"
+            style="grid-template-columns: repeat(2, minmax(0, 1fr))"
+          >
+            ${renderScheduleTabs(active)}
+          </div>
+          <div data-schedule-panel="upcoming" class="schedule-panel">
+            ${renderScheduleEventList(upcoming, 'No upcoming performances.')}
+          </div>
+          <div data-schedule-panel="prior" class="schedule-panel" hidden>
+            ${renderScheduleEventList(prior, 'No prior performances.')}
+          </div>
+        </div>
+      </div>
+    </section>
+  `
+}
+
+function programmeUpcomingBannerCorner(index: number): 'left' | 'right' {
+  // Odd index: media column on the right — place banner top-left (incl. title-only blocks).
+  return programmeColumnOrders(index).titleAlign === 'text-right' ? 'left' : 'right'
+}
+
+function renderProgrammeUpcomingBanner(
+  programmePath: string,
+  count: number,
+  corner: 'left' | 'right',
+): string {
+  if (count <= 0) return ''
+
+const label = count === 1 ? '1 upcoming event!' : `${count} upcoming events!`
+  const positionClass =
+    corner === 'left'
+      ? 'left-3 top-2.5 text-left md:left-5 md:top-5'
+      : 'right-3 top-2.5 text-right md:right-5 md:top-5'
+
+  return `
+    <a
+      href="#schedule"
+      data-programme-schedule-link
+      data-programme-path="${programmePath}"
+      class="absolute z-10 max-w-xs cursor-pointer text-xs italic tracking-wide text-white/95 transition-colors hover:underline hover:text-white ${positionClass}"
+ 
+ 
+    >
+      ${label}
+    </a>
+  `
+}
+
+function renderProgrammeMediaHeader(
+  titleBlock: string,
+  programmePath: string,
+  titleAlign: string,
+  bgStyle: string,
+  headerClass: string,
+  options: { centered?: boolean; index?: number } = {},
+): string {
+  const { centered = false, index = 0 } = options
+  const upcomingCount = eventsForProgramme(programmePath).length
+  const corner = programmeUpcomingBannerCorner(index)
+  const banner = renderProgrammeUpcomingBanner(programmePath, upcomingCount, corner)
+  const align = centered ? 'text-center' : titleAlign
+
+  return `
+    <header
+      class="programme-media-header relative shrink-0 border-b-2 border-white ${headerClass}"
+      style="${bgStyle}"
+    >
+      ${banner}
+      <div class="${align}">
+        ${titleBlock}
+      </div>
+    </header>
+  `
+}
+
+function tabButtonClass(isActive: boolean): string {
+  return `${PROGRAMME_TAB_BASE} ${isActive ? PROGRAMME_TAB_ACTIVE : PROGRAMME_TAB_INACTIVE}`
+}
+
+function programmeTabButtonClass(tab: ProgrammeTab, active: ProgrammeTab): string {
+  return tabButtonClass(tab === active)
+}
+
+type ScheduleTab = 'upcoming' | 'prior'
+
+const SCHEDULE_TAB_LABELS: Record<ScheduleTab, string> = {
+  upcoming: 'UPCOMING',
+  prior: 'PRIOR',
+}
+
+function scheduleTabButtonClass(tab: ScheduleTab, active: ScheduleTab): string {
+  return tabButtonClass(tab === active)
+}
+
+const PROGRAMME_TAB_LABELS: Record<ProgrammeTab, string> = {
   description: 'DESCRIPTION',
   repertoire: 'REPERTOIRE',
 }
 
-function programmeTabLabel(tab: ProgrammeTab, programmePath: string): string {
-  if (tab === 'upcoming') {
-    const count = eventsForProgramme(programmePath).length
-    return count > 0 ? `UPCOMING (${count})` : 'UPCOMING'
-  }
-  return PROGRAMME_TAB_LABELS[tab]
-}
-
-function renderProgrammeTabs(
-  available: ProgrammeTab[],
-  active: ProgrammeTab,
-  programmePath: string,
-): string {
+function renderProgrammeTabs(available: ProgrammeTab[], active: ProgrammeTab): string {
   return available
     .map(
       (id) => `
@@ -430,19 +659,15 @@ function renderProgrammeTabs(
           role="tab"
           aria-selected="${id === active}"
         >
-          ${programmeTabLabel(id, programmePath)}
+          ${PROGRAMME_TAB_LABELS[id]}
         </button>
       `,
     )
     .join('')
 }
 
-function renderProgrammeCopyColumn(
-  programme: Programme,
-  programmePath: string,
-  copyOrder: string,
-): string {
-  const available = programmeAvailableTabs(programme, programmePath)
+function renderProgrammeCopyColumn(programme: Programme, copyOrder: string): string {
+  const available = programmeAvailableTabs(programme)
   const active: ProgrammeTab = 'description'
   const showTabs = available.length > 1
 
@@ -453,7 +678,7 @@ function renderProgrammeCopyColumn(
           role="tablist"
           style="grid-template-columns: repeat(${available.length}, minmax(0, 1fr))"
         >
-          ${renderProgrammeTabs(available, active, programmePath)}
+          ${renderProgrammeTabs(available, active)}
         </div>
       `
     : ''
@@ -462,14 +687,6 @@ function renderProgrammeCopyColumn(
     ? `
           <div data-programme-panel="repertoire" class="programme-panel" hidden>
             ${renderProgrammeRepertoirePanel(programme.repertoire!)}
-          </div>
-        `
-    : ''
-
-  const upcomingPanel = available.includes('upcoming')
-    ? `
-          <div data-programme-panel="upcoming" class="programme-panel" hidden>
-            ${renderProgrammeUpcomingPanel(programmePath)}
           </div>
         `
     : ''
@@ -483,7 +700,6 @@ function renderProgrammeCopyColumn(
             <div class="${BIOGRAPHY_PROSE}">${renderMarkdown(programme.description)}</div>
           </div>
           ${repertoirePanel}
-          ${upcomingPanel}
         </div>
       </div>
     </div>
@@ -500,7 +716,12 @@ function programmeColumnOrders(index: number): { copy: string; media: string; ti
   }
 }
 
-function renderProgrammeMedia(programme: Programme, index: number, headerColor: string): string {
+function renderProgrammeMedia(
+  programme: Programme,
+  index: number,
+  headerColor: string,
+  programmePath: string,
+): string {
   const { media, titleAlign } = programmeColumnOrders(index)
   const bgStyle = `background-color: ${headerColor}`
   const images = getProgrammeImages(programme)
@@ -513,10 +734,15 @@ function renderProgrammeMedia(programme: Programme, index: number, headerColor: 
   if (!images.length) {
     return `
       <div data-programme-media class="min-w-0 ${media}">
-        <div class="${PROGRAMME_MEDIA_STACK}" style="${bgStyle}">
-          <header class="programme-media-header flex flex-1 flex-col items-center justify-center px-4 py-8 text-center md:px-6 md:py-12">
-            ${titleBlock}
-          </header>
+        <div class="${PROGRAMME_MEDIA_STACK} programme-media-stack--title-only relative" style="${bgStyle}">
+          ${renderProgrammeMediaHeader(
+            titleBlock,
+            programmePath,
+            titleAlign,
+            bgStyle,
+            'flex min-h-0 flex-1 flex-col justify-center border-b-0 px-4 py-8 md:px-6 md:py-12',
+            { centered: true, index },
+          )}
         </div>
       </div>
     `
@@ -525,9 +751,14 @@ function renderProgrammeMedia(programme: Programme, index: number, headerColor: 
   return `
     <div data-programme-media class="min-w-0 ${media}">
       <div class="${PROGRAMME_MEDIA_STACK_WITH_IMAGE}">
-        <header class="programme-media-header shrink-0 border-b-2 border-white px-4 py-2.5 ${titleAlign} md:px-6 md:py-6" style="${bgStyle}">
-          ${titleBlock}
-        </header>
+        ${renderProgrammeMediaHeader(
+          titleBlock,
+          programmePath,
+          titleAlign,
+          bgStyle,
+          `px-4 py-2.5 ${titleAlign} md:px-6 md:py-6`,
+          { index },
+        )}
         ${renderProgrammeCarousel(images)}
       </div>
     </div>
@@ -542,8 +773,8 @@ function renderProgramme(entry: ProgrammeEntry, index: number, headerColor: stri
   return `
     <article class="${divider}">
       <div class="${PROGRAMME_LAYOUT}">
-        ${renderProgrammeCopyColumn(programme, path, copy)}
-        ${renderProgrammeMedia(programme, index, headerColor)}
+        ${renderProgrammeCopyColumn(programme, copy)}
+        ${renderProgrammeMedia(programme, index, headerColor, path)}
       </div>
     </article>
   `
@@ -724,6 +955,120 @@ function bindProgrammeTabs(): void {
   })
 }
 
+function clearScheduleHighlights(): void {
+  document.querySelectorAll('.schedule-event--highlight').forEach((el) => {
+    el.classList.remove('schedule-event--highlight')
+  })
+}
+
+function highlightScheduleEventsForProgramme(programmePath: string): void {
+  clearScheduleHighlights()
+  const rows = document.querySelectorAll<HTMLElement>(
+    `[data-schedule-event][data-programme-path="${programmePath}"]`,
+  )
+  rows.forEach((row) => row.classList.add('schedule-event--highlight'))
+  if (rows.length) {
+    window.setTimeout(clearScheduleHighlights, SCHEDULE_HIGHLIGHT_MS)
+  }
+}
+
+function scrollToScheduleTarget(element: HTMLElement, smooth: boolean): void {
+  const y = element.getBoundingClientRect().top + window.scrollY - SCHEDULE_SCROLL_OFFSET_PX
+  window.scrollTo({ top: Math.max(0, y), behavior: smooth ? 'smooth' : 'instant' })
+}
+
+function applyScheduleTab(root: HTMLElement, tab: ScheduleTab): void {
+  root.dataset.activeTab = tab
+
+  root.querySelectorAll<HTMLButtonElement>('[data-schedule-tab]').forEach((button) => {
+    const id = button.dataset.scheduleTab as ScheduleTab | undefined
+    if (!id) return
+    button.className = scheduleTabButtonClass(id, tab)
+    button.setAttribute('aria-selected', String(id === tab))
+  })
+
+  root.querySelectorAll<HTMLElement>('[data-schedule-panel]').forEach((panel) => {
+    const id = panel.dataset.schedulePanel as ScheduleTab | undefined
+    if (id === tab) panel.removeAttribute('hidden')
+    else panel.setAttribute('hidden', '')
+  })
+}
+
+function showScheduleTabForEvent(eventId: string): void {
+  const row = document.getElementById(scheduleEventDomId(eventId))
+  const root = document.querySelector<HTMLElement>('[data-schedule-root]')
+  if (!row || !root) return
+
+  const panel = row.closest<HTMLElement>('[data-schedule-panel]')
+  const tab = panel?.dataset.schedulePanel as ScheduleTab | undefined
+  if (tab) applyScheduleTab(root, tab)
+}
+
+function navigateToProgrammeSchedule(programmePath: string): void {
+  const schedule = document.getElementById('schedule')
+  if (!schedule) return
+
+  const root = document.querySelector<HTMLElement>('[data-schedule-root]')
+  if (root) applyScheduleTab(root, 'upcoming')
+
+  const programmeEvents = eventsForProgramme(programmePath)
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const smooth = !reducedMotion
+
+  const firstId = programmeEvents[0]?.id
+  const firstRow = firstId ? document.getElementById(scheduleEventDomId(firstId)) : null
+  const target = firstRow ?? schedule
+
+  scrollToScheduleTarget(target, smooth)
+
+  if (reducedMotion) highlightScheduleEventsForProgramme(programmePath)
+  else window.setTimeout(() => highlightScheduleEventsForProgramme(programmePath), 450)
+}
+
+function bindScheduleTabs(): void {
+  document.querySelectorAll<HTMLElement>('[data-schedule-root]').forEach((root) => {
+    root.querySelectorAll<HTMLButtonElement>('[data-schedule-tab]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const tab = button.dataset.scheduleTab as ScheduleTab | undefined
+        if (!tab || root.dataset.activeTab === tab) return
+        applyScheduleTab(root, tab)
+      })
+    })
+  })
+}
+
+function bindScheduleNavigation(): void {
+  document.querySelectorAll<HTMLAnchorElement>('[data-programme-schedule-link]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault()
+      const programmePath = link.dataset.programmePath
+      if (!programmePath) return
+      navigateToProgrammeSchedule(programmePath)
+    })
+  })
+
+  const hash = window.location.hash.slice(1)
+  if (!hash.startsWith('schedule')) return
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (hash === 'schedule') {
+    const section = document.getElementById('schedule')
+    if (section) scrollToScheduleTarget(section, !reducedMotion)
+    return
+  }
+
+  const row = document.getElementById(hash)
+  if (!row) return
+
+  const eventId = row.dataset.eventId
+  if (eventId) showScheduleTabForEvent(eventId)
+
+  scrollToScheduleTarget(row, !reducedMotion)
+  const programmePath = row.dataset.programmePath
+  if (programmePath) highlightScheduleEventsForProgramme(programmePath)
+}
+
 function bindAboutSection(): void {
   document.querySelectorAll<HTMLButtonElement>('[data-lang]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -782,14 +1127,7 @@ function renderApp(): void {
 
       ${renderProgrammesSection()}
 
-      <section id="schedule" class="px-6 py-32">
-        <div class="max-w-4xl mx-auto text-center">
-          <h2 class="text-3xl tracking-widest font-light mb-8 text-gray-900">SCHEDULE</h2>
-          <p class="text-lg text-gray-600 leading-relaxed font-light">
-            Upcoming performances will be listed here.
-          </p>
-        </div>
-      </section>
+      ${renderScheduleSection()}
     </main>
   `
 }
@@ -798,3 +1136,5 @@ renderApp()
 bindAboutSection()
 bindProgrammeTabs()
 bindProgrammeCarousels()
+bindScheduleTabs()
+bindScheduleNavigation()

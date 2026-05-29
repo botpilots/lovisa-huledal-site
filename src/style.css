@@ -216,6 +216,24 @@ body {
   overflow: hidden;
 }
 
+.programme-media-stack--title-only .programme-media-header {
+  flex: 1;
+  min-height: 0;
+}
+
+.programme-upcoming-banner {
+  pointer-events: auto;
+  text-decoration: underline;
+  text-underline-offset: 2px;  
+}
+
+.programme-upcoming-banner:hover {
+	pointer-events: auto;
+	text-decoration: underline;
+	text-underline-offset: 2px;  
+	color: var(--color-sand-50);
+  }
+
 @media (min-width: 1024px) {
   .programme-media-stack {
     min-height: 32rem;
@@ -237,5 +255,27 @@ body {
 
   .programme-media-stack--with-carousel .programme-carousel {
     min-height: 0;
+  }
+}
+
+@keyframes schedule-event-pulse {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: var(--color-sand-200);
+  }
+}
+
+.schedule-event--highlight {
+  animation: schedule-event-pulse 1s ease-in-out 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-event--highlight {
+    animation: none;
+    background-color: var(--color-sand-200);
   }
 }

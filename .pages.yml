@@ -186,6 +186,11 @@ content:
         sort: date
         order: desc
     fields:
+      - name: id
+        label: Event ID
+        description: Optional. Used for schedule links (e.g. #schedule-event-my-id). If empty, the filename is used (e.g. 2026-07-30-la-liberazione).
+        type: string
+
       - name: date
         type: date
 
@@ -194,7 +199,14 @@ content:
         type: string
 
       - name: name
-        label: Event Name
+        label: Event / performance name
+        description: Optional. If empty, the linked programme title is shown. If set, the programme title appears in parentheses after the name on the website.
+        type: string
+        required: false
+
+      - name: location
+        label: Location
+        description: Venue or place, e.g. Båstad Kyrka, Confidencen.
         type: string
 
       - name: description
