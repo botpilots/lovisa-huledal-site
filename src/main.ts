@@ -249,6 +249,7 @@ const BIOGRAPHY_PROSE =
 /** Desktop: extra section padding; top −10% vs even 5.25rem, title gap +10% vs 3.25rem */
 const SECTION_PADDING_Y = 'py-16 md:pt-[4.725rem] md:pb-[5.25rem]'
 const SECTION_TITLE_MARGIN = 'mb-8 md:mb-[3.575rem]'
+const SECTION_TITLE_BASE = 'select-none text-3xl font-light tracking-widest text-gray-900'
 const ABOUT_SECTION_PADDING = 'pt-12 pb-16 md:pt-[3.825rem] md:pb-[5.25rem]'
 const ABOUT_SECTION_TITLE_MARGIN = 'mb-12 md:mb-[4.675rem]'
 const SECTION_CONTENT_STACK = 'space-y-12 md:space-y-[4.25rem]'
@@ -726,7 +727,7 @@ function renderScheduleSection(): string {
     return `
       <section id="schedule" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
         <div class="mx-auto max-w-4xl text-center">
-          <h2 class="${SECTION_TITLE_MARGIN} text-3xl font-light tracking-widest text-gray-900">SCHEDULE</h2>
+          <h2 class="${SECTION_TITLE_MARGIN} ${SECTION_TITLE_BASE}">SCHEDULE</h2>
           <p class="text-lg font-light leading-relaxed text-gray-600">
             No performances listed at the moment.
           </p>
@@ -738,7 +739,7 @@ function renderScheduleSection(): string {
   return `
     <section id="schedule" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-5xl">
-        <h2 class="${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">SCHEDULE</h2>
+        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">SCHEDULE</h2>
         <div data-schedule-root data-active-tab="${active}">
           <div
             class="${PROGRAMME_TABS_CLASS} mx-auto max-w-md"
@@ -988,7 +989,7 @@ function renderProgrammesSection(): string {
   return `
     <section id="programmes" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">PROGRAMMES</h2>
+        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">PROGRAMMES</h2>
         <div class="${SECTION_CONTENT_STACK}">
           ${programmeEntries.map((entry, index) => renderProgramme(entry, index, headerColors[index]!)).join('')}
         </div>
@@ -1129,7 +1130,7 @@ function renderListenSection(): string {
   return `
     <section id="listen" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">LISTEN</h2>
+        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">LISTEN</h2>
         <div data-listen-gallery-root>
           ${renderListenGallery()}
         </div>
@@ -1279,7 +1280,7 @@ function renderPicturesSection(): string {
   return `
     <section id="pictures" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">PICTURES</h2>
+        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">PICTURES</h2>
         <div data-pictures-gallery-root>
           ${renderPicturesGallery()}
         </div>
@@ -1454,7 +1455,7 @@ function renderContactSection(): string {
   return `
     <section id="contact" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">CONTACT</h2>
+        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">CONTACT</h2>
         <div class="contact-layout mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,16rem)_1fr] lg:items-start lg:gap-16">
           <div class="flex justify-center lg:justify-start">
             <img
@@ -1496,7 +1497,7 @@ function renderAboutSection(): string {
           <button type="button" data-lang="en" class="cursor-pointer select-none ${language === 'en' ? activeClass : inactiveClass} transition-colors">EN</button>
         </div>
 
-        <h2 class="select-none ${ABOUT_SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">ABOUT</h2>
+        <h2 class="${ABOUT_SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">ABOUT</h2>
 
         <div id="about-bio" class="about-bio" data-expanded="${aboutExpanded}">
           <div class="about-body">
