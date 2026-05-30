@@ -237,7 +237,7 @@ const SECTION_TITLE_MARGIN = 'mb-8'
 const PROGRAMME_TABS_CLASS =
   'programme-tabs mb-4 grid w-full shrink-0 py-2 lg:mb-8 lg:py-4'
 
-const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-5 lg:grid-cols-2 lg:items-start lg:gap-10'
+const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-5 md:grid-cols-5 md:items-start md:gap-10'
 const PROGRAMME_MEDIA_STACK = 'programme-media-stack'
 const PROGRAMME_MEDIA_STACK_WITH_IMAGE = 'programme-media-stack programme-media-stack--with-carousel'
 const PROGRAMME_TAB_BASE =
@@ -529,7 +529,7 @@ function renderProgrammeCarouselDots(count: number): string {
   }).join('')
 }
 
-function renderProgrammeCarousel(images: ProgrammeImage[]): string {
+function renderProgrammeCarouselFrame(images: ProgrammeImage[]): string {
   const slides = images
     .map(
       (img, i) => `
@@ -551,26 +551,18 @@ function renderProgrammeCarousel(images: ProgrammeImage[]): string {
     ? `${renderProgrammeCarouselChevron('prev')}${renderProgrammeCarouselChevron('next')}`
     : ''
 
-  const dots = multi
-    ? `
-        <div class="flex shrink-0 items-center justify-center gap-0.5 border-t border-sand-300/80 bg-sand-100 py-2" data-carousel-dots>
-          ${renderProgrammeCarouselDots(images.length)}
-        </div>
-      `
-    : ''
-
   return `
-    <div
-      class="programme-carousel flex min-h-0 flex-1 flex-col"
-      data-programme-carousel
-      data-slide-index="0"
-      data-slide-count="${images.length}"
-    >
-      <div class="relative min-h-0 flex-1 overflow-hidden bg-sand-200">
-        <div class="absolute inset-0">${slides}</div>
-        ${controls}
-      </div>
-      ${dots}
+    <div class="programme-media-frame relative min-h-0 overflow-hidden bg-sand-200">
+      <div class="absolute inset-0">${slides}</div>
+      ${controls}
+    </div>
+  `
+}
+
+function renderProgrammeCarouselDotsBar(count: number): string {
+  return `
+    <div class="programme-carousel-dots" data-carousel-dots>
+      ${renderProgrammeCarouselDots(count)}
     </div>
   `
 }
@@ -768,12 +760,18 @@ const label = count === 1 ? '1 upcoming event!' : `${count} upcoming events!`
   `
 }
 
+function renderProgrammeTitleBlock(title: string): string {
+  return `
+    <p class="programme-media-title-label">PROGRAMME</p>
+    <h3 class="programme-media-title-heading">${title}</h3>
+  `
+}
+
 function renderProgrammeMediaHeader(
-  titleBlock: string,
+  programmeTitle: string,
   programmePath: string,
   titleAlign: string,
   bgStyle: string,
-  headerClass: string,
   options: { centered?: boolean; index?: number } = {},
 ): string {
   const { centered = false, index = 0 } = options
@@ -784,12 +782,12 @@ function renderProgrammeMediaHeader(
 
   return `
     <header
-      class="programme-media-header relative shrink-0 border-b-2 border-white ${headerClass}"
+      class="programme-media-header relative shrink-0 border-b-2 border-white"
       style="${bgStyle}"
     >
       ${banner}
       <div class="${align}">
-        ${titleBlock}
+        ${renderProgrammeTitleBlock(programmeTitle)}
       </div>
     </header>
   `
@@ -877,12 +875,16 @@ function renderProgrammeCopyColumn(programme: Programme, copyOrder: string): str
   `
 }
 
-/** Title + image share one column; text in the other. Alternates left / right on lg. */
+/** Copy 3/5, media 2/5 from md up; single column below md. Alternates left / right on md+. */
 function programmeColumnOrders(index: number): { copy: string; media: string; titleAlign: string } {
   const mediaOnRight = index % 2 === 1
   return {
-    copy: mediaOnRight ? 'order-2 lg:order-1' : 'order-2 lg:order-2',
-    media: mediaOnRight ? 'order-1 lg:order-2' : 'order-1 lg:order-1',
+    copy: mediaOnRight
+      ? 'order-2 md:order-1 md:col-span-3'
+      : 'order-2 md:order-2 md:col-span-3 md:col-start-3',
+    media: mediaOnRight
+      ? 'order-1 md:order-2 md:col-span-2 md:col-start-4'
+      : 'order-1 md:order-1 md:col-span-2',
     titleAlign: mediaOnRight ? 'text-right' : 'text-left',
   }
 }
@@ -897,40 +899,36 @@ function renderProgrammeMedia(
   const bgStyle = `background-color: ${headerColor}`
   const images = getProgrammeImages(programme)
 
-  const titleBlock = `
-    <p class="mb-1 text-xs font-normal tracking-[0.25em] text-white/80 md:mb-2">PROGRAMME</p>
-    <h3 class="text-xl font-light leading-tight tracking-wide text-white md:text-3xl">${programme.title}</h3>
-  `
-
   if (!images.length) {
     return `
       <div data-programme-media class="min-w-0 ${media}">
-        <div class="${PROGRAMME_MEDIA_STACK} programme-media-stack--title-only relative" style="${bgStyle}">
-          ${renderProgrammeMediaHeader(
-            titleBlock,
-            programmePath,
-            titleAlign,
-            bgStyle,
-            'flex min-h-0 flex-1 flex-col justify-center border-b-0 px-4 py-8 md:px-6 md:py-12',
-            { centered: true, index },
-          )}
+        <div class="${PROGRAMME_MEDIA_STACK} programme-media-stack--title-only relative w-full" style="${bgStyle}">
+          ${renderProgrammeMediaHeader(programme.title, programmePath, titleAlign, bgStyle, {
+            centered: true,
+            index,
+          })}
         </div>
       </div>
     `
   }
 
+  const multi = images.length > 1
+
   return `
     <div data-programme-media class="min-w-0 ${media}">
-      <div class="${PROGRAMME_MEDIA_STACK_WITH_IMAGE}">
-        ${renderProgrammeMediaHeader(
-          titleBlock,
-          programmePath,
-          titleAlign,
-          bgStyle,
-          `px-4 py-2.5 ${titleAlign} md:px-6 md:py-6`,
-          { index },
-        )}
-        ${renderProgrammeCarousel(images)}
+      <div
+        class="programme-media-group"
+        data-programme-carousel
+        data-slide-index="0"
+        data-slide-count="${images.length}"
+      >
+        <div class="${PROGRAMME_MEDIA_STACK_WITH_IMAGE}">
+          ${renderProgrammeMediaHeader(programme.title, programmePath, titleAlign, bgStyle, {
+            index,
+          })}
+          ${renderProgrammeCarouselFrame(images)}
+        </div>
+        ${multi ? renderProgrammeCarouselDotsBar(images.length) : ''}
       </div>
     </div>
   `
