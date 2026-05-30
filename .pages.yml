@@ -31,7 +31,21 @@ content:
       delete: false
     fields:
       - name: title
+        label: Hero title
+        description: Shown on the landing image in italics (e.g. mezzo-soprano).
         type: string
+
+      - name: titlePosition
+        label: Hero title position
+        description: Corner of the landing image where the title appears (with padding from the edge).
+        type: select
+        default: bottom-left
+        options:
+          values:
+            - top-left
+            - top-right
+            - bottom-left
+            - bottom-right
 
       - name: biography
         label: Biography (Swedish)

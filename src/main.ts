@@ -2,6 +2,8 @@ import './style.css'
 import { animateAboutLayout } from './about-layout-animation'
 import { marked } from 'marked'
 import home from '../content/home.json'
+import contactData from '../content/contact.json'
+import photosContent from '../content/photos.json'
 
 type Language = 'sv' | 'en'
 
@@ -12,10 +14,21 @@ interface MosaicImage {
   alt?: string
 }
 
+type HeroTitlePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+
 interface HomeContent {
+  title?: string
+  titlePosition?: string
   biography: string
   biographyEn: string
   aboutMosaic: MosaicImage[]
+}
+
+const HERO_TITLE_POSITION_CLASS: Record<HeroTitlePosition, string> = {
+  'top-left': 'hero-title--top left-0 text-left',
+  'top-right': 'hero-title--top right-0 text-right',
+  'bottom-left': 'bottom-0 left-0 text-left',
+  'bottom-right': 'bottom-0 right-0 text-right',
 }
 
 interface ProgrammeRepertoireEntry {
@@ -72,6 +85,62 @@ interface EventEntry {
   event: Event
 }
 
+interface Video {
+  youtubeLink: string
+  title: string
+  description: string
+}
+
+interface VideoEntry {
+  id: string
+  path: string
+  video: Video
+}
+
+interface PhotoItem {
+  image?: string
+  caption?: string
+}
+
+interface PhotosContent {
+  portraits?: PhotoItem[]
+  onStage?: PhotoItem[]
+}
+
+type PhotoCategory = 'portraits' | 'onStage'
+
+interface PhotoEntry {
+  id: string
+  category: PhotoCategory
+  photo: { image: string; caption?: string }
+}
+
+interface ContactPerson {
+  name?: string
+  email?: string
+  phone?: string
+}
+
+interface ContactContent {
+  agency: ContactPerson
+  lovisa: ContactPerson
+  socialMedia?: {
+    facebook?: string
+    instagram?: string
+    youtube?: string
+  }
+}
+
+const AGENCY_LOGO_SRC = '/media/c50241_ff6d03952d35443998f5dca8861f44e6~mv2.avif'
+
+const SOCIAL_ICON_SRC = {
+  facebook: '/media/facebook.svg',
+  youtube: '/media/youtube.svg',
+  instagram: '/media/instagram.svg',
+} as const
+
+const contact = contactData as ContactContent
+
 function cmsPathFromGlob(filePath: string): string {
   return filePath.replace(/^\.\.\//, '')
 }
@@ -79,6 +148,10 @@ function cmsPathFromGlob(filePath: string): string {
 function eventIdFromGlob(filePath: string): string {
   const base = filePath.split('/').pop() ?? filePath
   return base.replace(/\.json$/i, '')
+}
+
+function videoIdFromGlob(filePath: string): string {
+  return eventIdFromGlob(filePath)
 }
 
 function scheduleEventDomId(eventId: string): string {
@@ -101,6 +174,45 @@ const eventModules = import.meta.glob<Event>('../content/events/*.json', {
   eager: true,
   import: 'default',
 })
+
+const videoModules = import.meta.glob<Video>('../content/videos/*.json', {
+  eager: true,
+  import: 'default',
+})
+
+const videoEntries: VideoEntry[] = Object.entries(videoModules)
+  .map(([filePath, video]) => ({
+    id: videoIdFromGlob(filePath),
+    path: cmsPathFromGlob(filePath),
+    video,
+  }))
+  .sort((a, b) => a.video.title.trim().localeCompare(b.video.title.trim(), 'sv'))
+
+const PHOTO_CATEGORIES: PhotoCategory[] = ['portraits', 'onStage']
+
+const PHOTO_CATEGORY_LABELS: Record<PhotoCategory, string> = {
+  portraits: 'PORTRAITS',
+  onStage: 'ON STAGE',
+}
+
+function buildPhotoEntries(content: PhotosContent): PhotoEntry[] {
+  const entries: PhotoEntry[] = []
+  for (const category of PHOTO_CATEGORIES) {
+    for (const [index, item] of (content[category] ?? []).entries()) {
+      const image = item.image?.trim()
+      if (!image) continue
+      const caption = item.caption?.trim()
+      entries.push({
+        id: `${category}-${index}`,
+        category,
+        photo: caption ? { image, caption } : { image },
+      })
+    }
+  }
+  return entries
+}
+
+const photoEntries = buildPhotoEntries(photosContent as PhotosContent)
 
 const eventEntries: EventEntry[] = Object.entries(eventModules)
   .map(([filePath, event]) => {
@@ -142,6 +254,41 @@ const content = home as HomeContent
 
 let language: Language = 'sv'
 let aboutExpanded = false
+let listenSelectedVideoId: string | null = null
+let picturesSelectedPhotoId: string | null = null
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function youtubeVideoId(url: string): string | null {
+  try {
+    const parsed = new URL(url.trim())
+    if (parsed.hostname === 'youtu.be') {
+      const id = parsed.pathname.replace(/^\//, '').split('/')[0]
+      return id || null
+    }
+    const fromQuery = parsed.searchParams.get('v')
+    if (fromQuery) return fromQuery
+    const embedMatch = parsed.pathname.match(/\/embed\/([^/?]+)/)
+    if (embedMatch?.[1]) return embedMatch[1]
+  } catch {
+    return null
+  }
+  return null
+}
+
+function youtubeThumbnailUrl(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+}
+
+function youtubeEmbedUrl(videoId: string): string {
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`
+}
 
 function biographyMarkdown() {
   return language === 'sv' ? content.biography : content.biographyEn
@@ -162,6 +309,25 @@ function splitBiography(markdown: string) {
 
 function getMosaicImages(): MosaicImage[] {
   return (content.aboutMosaic ?? []).slice(0, 4)
+}
+
+function parseHeroTitlePosition(raw: string | undefined): HeroTitlePosition {
+  const value = raw?.trim() as HeroTitlePosition | undefined
+  if (value && value in HERO_TITLE_POSITION_CLASS) return value
+  return 'bottom-left'
+}
+
+function renderHeroTitle(): string {
+  const title = content.title?.trim()
+  if (!title) return ''
+
+  const position = parseHeroTitlePosition(content.titlePosition)
+
+  return `
+    <p class="hero-title absolute z-10 p-6 text-xl font-light italic tracking-[0.2em] text-white/95 md:p-10 md:text-2xl ${HERO_TITLE_POSITION_CLASS[position]}">
+      ${escapeHtml(title)}
+    </p>
+  `
 }
 
 function imageObjectPosition(photo: { offsetX?: number; offsetY?: number }): string {
@@ -823,20 +989,480 @@ function renderMosaic(): string {
   `
 }
 
+function videoEntryById(id: string): VideoEntry | undefined {
+  return videoEntries.find((entry) => entry.id === id)
+}
+
+function renderMediaCloseButton(closeSelector: string, ariaLabel: string): string {
+  return `
+    <button
+      type="button"
+      ${closeSelector}
+      class="media-close absolute right-6 top-6 z-10 flex h-10 w-10 cursor-pointer select-none items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-sand-200/80 hover:text-gray-900"
+      aria-label="${ariaLabel}"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  `
+}
+
+function setMediaOverlayOpen(open: boolean): void {
+  document.body.classList.toggle('media-overlay-open', open)
+}
+
+function renderListenThumbnail(entry: VideoEntry): string {
+  const { video, id } = entry
+  const ytId = youtubeVideoId(video.youtubeLink)
+  if (!ytId) return ''
+
+  const title = video.title.trim()
+
+  return `
+    <button
+      type="button"
+      data-listen-video="${id}"
+      class="listen-thumb group flex min-w-0 cursor-pointer flex-col text-left transition-opacity hover:opacity-90"
+    >
+      <span class="listen-thumb-media relative block aspect-video overflow-hidden bg-sand-200">
+        <img
+          src="${youtubeThumbnailUrl(ytId)}"
+          alt=""
+          class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          loading="lazy"
+        />
+        <span class="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors group-hover:bg-black/25" aria-hidden="true">
+          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+        </span>
+      </span>
+      <span class="mt-3 text-base font-light leading-snug text-gray-900">${escapeHtml(title)}</span>
+    </button>
+  `
+}
+
+function renderListenGallery(): string {
+  const items = videoEntries.map((entry) => renderListenThumbnail(entry)).filter(Boolean)
+
+  if (!items.length) {
+    return `
+      <p class="text-center text-lg font-light leading-relaxed text-gray-600">
+        No videos listed at the moment.
+      </p>
+    `
+  }
+
+  return `<div class="listen-gallery">${items.join('')}</div>`
+}
+
+function renderListenDetailShell(): string {
+  return `
+    <div
+      data-listen-detail
+      class="listen-detail fixed inset-0 z-[60] overflow-y-auto bg-sand-100"
+      hidden
+    >
+      ${renderMediaCloseButton('data-listen-close', 'Close video')}
+      <div class="mx-auto flex min-h-full max-w-7xl flex-col justify-center px-6 py-24 md:py-32">
+        <div class="${PROGRAMME_LAYOUT}">
+          <div class="listen-embed min-w-0 overflow-hidden bg-sand-200">
+            <iframe
+              data-listen-iframe
+              class="listen-embed-frame h-full w-full"
+              title=""
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              referrerpolicy="strict-origin-when-cross-origin"
+            ></iframe>
+          </div>
+          <div class="min-w-0">
+            <p class="mb-2 text-xs font-normal tracking-[0.25em] text-sand-700">LISTEN</p>
+            <h3 data-listen-detail-title class="mb-6 text-2xl font-light leading-tight tracking-wide text-gray-900 md:text-3xl"></h3>
+            <div data-listen-detail-description class="${BIOGRAPHY_PROSE}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+function renderListenSection(): string {
+  return `
+    <section id="listen" class="bg-sand-100 px-6 py-32">
+      <div class="mx-auto max-w-7xl">
+        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">LISTEN</h2>
+        <div data-listen-gallery-root>
+          ${renderListenGallery()}
+        </div>
+      </div>
+      ${renderListenDetailShell()}
+    </section>
+  `
+}
+
+
+function populateListenDetail(entry: VideoEntry): void {
+  const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
+  const iframe = document.querySelector<HTMLIFrameElement>('[data-listen-iframe]')
+  const titleEl = document.querySelector<HTMLElement>('[data-listen-detail-title]')
+  const descriptionEl = document.querySelector<HTMLElement>('[data-listen-detail-description]')
+  if (!detail || !iframe || !titleEl || !descriptionEl) return
+
+  const { video } = entry
+  const ytId = youtubeVideoId(video.youtubeLink)
+  if (!ytId) return
+
+  const title = video.title.trim()
+  iframe.title = title
+  iframe.src = youtubeEmbedUrl(ytId)
+  titleEl.textContent = title
+  descriptionEl.innerHTML = `<p>${escapeHtml(video.description.trim())}</p>`
+}
+
+function clearListenDetail(): void {
+  const iframe = document.querySelector<HTMLIFrameElement>('[data-listen-iframe]')
+  if (iframe) iframe.src = ''
+}
+
+function openListenVideo(id: string): void {
+  const entry = videoEntryById(id)
+  if (!entry) return
+
+  listenSelectedVideoId = id
+  populateListenDetail(entry)
+
+  const gallery = document.querySelector<HTMLElement>('[data-listen-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
+  gallery?.setAttribute('hidden', '')
+  detail?.removeAttribute('hidden')
+  setMediaOverlayOpen(true)
+}
+
+function closeListenVideo(): void {
+  if (!listenSelectedVideoId) return
+
+  listenSelectedVideoId = null
+  clearListenDetail()
+
+  const gallery = document.querySelector<HTMLElement>('[data-listen-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
+  gallery?.removeAttribute('hidden')
+  detail?.setAttribute('hidden', '')
+  setMediaOverlayOpen(false)
+
+  const section = document.getElementById('listen')
+  if (section) section.scrollIntoView({ behavior: 'instant', block: 'start' })
+}
+
+function photoEntryById(id: string): PhotoEntry | undefined {
+  return photoEntries.find((entry) => entry.id === id)
+}
+
+function renderPictureThumbnail(entry: PhotoEntry): string {
+  const { photo, id } = entry
+  const caption = photo.caption
+
+  const captionMarkup = caption
+    ? `<p class="mt-4 text-sm font-light tracking-wide text-gray-500">${escapeHtml(caption)}</p>`
+    : ''
+
+  return `
+    <button
+      type="button"
+      data-pictures-photo="${id}"
+      class="pictures-thumb group flex min-w-0 cursor-pointer flex-col text-left"
+    >
+      <span class="block overflow-hidden bg-sand-200">
+        <img
+          src="${photo.image}"
+          alt="${caption ? escapeHtml(caption) : ''}"
+          class="pictures-thumb-image w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+          loading="lazy"
+        />
+      </span>
+      ${captionMarkup}
+    </button>
+  `
+}
+
+function renderPicturesCategory(category: PhotoCategory): string {
+  const items = photoEntries.filter((entry) => entry.category === category)
+  if (!items.length) return ''
+
+  return `
+    <div class="pictures-category">
+      <h3 class="mb-10 text-center text-sm font-normal tracking-[0.25em] text-sand-800">${PHOTO_CATEGORY_LABELS[category]}</h3>
+      <div class="pictures-grid">
+        ${items.map((entry) => renderPictureThumbnail(entry)).join('')}
+      </div>
+    </div>
+  `
+}
+
+function renderPicturesGallery(): string {
+  const blocks = PHOTO_CATEGORIES.map((category) => renderPicturesCategory(category)).filter(Boolean)
+
+  if (!blocks.length) {
+    return `
+      <p class="text-center text-lg font-light leading-relaxed text-gray-600">
+        No photos listed at the moment.
+      </p>
+    `
+  }
+
+  return `<div class="space-y-20">${blocks.join('')}</div>`
+}
+
+function renderPicturesDetailShell(): string {
+  return `
+    <div
+      data-pictures-detail
+      class="pictures-detail fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-sand-50 px-6 py-24"
+      hidden
+    >
+      ${renderMediaCloseButton('data-pictures-close', 'Close photo')}
+      <figure class="flex w-full max-w-6xl flex-col items-center">
+        <img
+          data-pictures-detail-image
+          alt=""
+          class="pictures-detail-image max-h-[min(85vh,56rem)] w-auto max-w-full object-contain"
+        />
+        <figcaption
+          data-pictures-detail-caption
+          class="mt-6 hidden text-center text-sm font-light tracking-wide text-gray-500"
+        ></figcaption>
+      </figure>
+    </div>
+  `
+}
+
+function renderPicturesSection(): string {
+  return `
+    <section id="pictures" class="bg-sand-50 px-6 py-32">
+      <div class="mx-auto max-w-7xl">
+        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">PICTURES</h2>
+        <div data-pictures-gallery-root>
+          ${renderPicturesGallery()}
+        </div>
+      </div>
+      ${renderPicturesDetailShell()}
+    </section>
+  `
+}
+
+function populatePicturesDetail(entry: PhotoEntry): void {
+  const imageEl = document.querySelector<HTMLImageElement>('[data-pictures-detail-image]')
+  const captionEl = document.querySelector<HTMLElement>('[data-pictures-detail-caption]')
+  if (!imageEl || !captionEl) return
+
+  const { photo } = entry
+  imageEl.src = photo.image
+  const caption = photo.caption
+  if (caption) {
+    captionEl.textContent = caption
+    captionEl.classList.remove('hidden')
+    imageEl.alt = caption
+  } else {
+    captionEl.textContent = ''
+    captionEl.classList.add('hidden')
+    imageEl.alt = ''
+  }
+}
+
+function clearPicturesDetail(): void {
+  const imageEl = document.querySelector<HTMLImageElement>('[data-pictures-detail-image]')
+  if (imageEl) {
+    imageEl.removeAttribute('src')
+    imageEl.alt = ''
+  }
+}
+
+function openPicture(id: string): void {
+  const entry = photoEntryById(id)
+  if (!entry) return
+
+  picturesSelectedPhotoId = id
+  populatePicturesDetail(entry)
+
+  const gallery = document.querySelector<HTMLElement>('[data-pictures-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-pictures-detail]')
+  gallery?.setAttribute('hidden', '')
+  detail?.removeAttribute('hidden')
+  setMediaOverlayOpen(true)
+}
+
+function closePicture(): void {
+  if (!picturesSelectedPhotoId) return
+
+  picturesSelectedPhotoId = null
+  clearPicturesDetail()
+
+  const gallery = document.querySelector<HTMLElement>('[data-pictures-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-pictures-detail]')
+  gallery?.removeAttribute('hidden')
+  detail?.setAttribute('hidden', '')
+  setMediaOverlayOpen(false)
+
+  const section = document.getElementById('pictures')
+  if (section) section.scrollIntoView({ behavior: 'instant', block: 'start' })
+}
+
+function onMediaOverlayEscape(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') return
+  if (listenSelectedVideoId) {
+    event.preventDefault()
+    closeListenVideo()
+    return
+  }
+  if (picturesSelectedPhotoId) {
+    event.preventDefault()
+    closePicture()
+  }
+}
+
+function bindListenSection(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-listen-video]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.listenVideo
+      if (!id) return
+      openListenVideo(id)
+    })
+  })
+
+  document.querySelector<HTMLButtonElement>('[data-listen-close]')?.addEventListener('click', () => {
+    closeListenVideo()
+  })
+}
+
+function bindPicturesSection(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-pictures-photo]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.picturesPhoto
+      if (!id) return
+      openPicture(id)
+    })
+  })
+
+  document.querySelector<HTMLButtonElement>('[data-pictures-close]')?.addEventListener('click', () => {
+    closePicture()
+  })
+}
+
+const CONTACT_LINK_CLASS =
+  'text-sand-800 underline decoration-sand-300 underline-offset-4 transition-colors hover:text-gray-900'
+
+function telHref(phone: string): string {
+  const normalized = phone.trim().replace(/[^\d+]/g, '')
+  return normalized ? `tel:${normalized}` : '#'
+}
+
+function renderContactSocialLink(
+  url: string | undefined,
+  iconSrc: string,
+  label: string,
+): string {
+  const href = url?.trim()
+  if (!href) return ''
+
+  return `
+    <a
+      href="${href}"
+      class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-sand-300/90 transition-colors hover:border-sand-600 hover:bg-sand-200/60"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="${label} (opens in new tab)"
+    >
+      <img src="${iconSrc}" alt="" class="h-5 w-5" width="20" height="20" loading="lazy" />
+    </a>
+  `
+}
+
+function renderContactSocialLinks(): string {
+  const { socialMedia } = contact
+  if (!socialMedia) return ''
+
+  const links = [
+    renderContactSocialLink(socialMedia.facebook, SOCIAL_ICON_SRC.facebook, 'Facebook'),
+    renderContactSocialLink(socialMedia.youtube, SOCIAL_ICON_SRC.youtube, 'YouTube'),
+    renderContactSocialLink(socialMedia.instagram, SOCIAL_ICON_SRC.instagram, 'Instagram'),
+  ].filter(Boolean)
+
+  if (!links.length) return ''
+
+  return `<div class="mt-10 flex flex-wrap gap-3">${links.join('')}</div>`
+}
+
+function renderContactEmailLink(email: string | undefined): string {
+  const value = email?.trim()
+  if (!value) return ''
+  return `<a href="mailto:${encodeURIComponent(value)}" class="${CONTACT_LINK_CLASS}">${escapeHtml(value)}</a>`
+}
+
+function renderContactPhoneLink(phone: string | undefined): string {
+  const value = phone?.trim()
+  if (!value) return ''
+  return `<a href="${telHref(value)}" class="${CONTACT_LINK_CLASS}">${escapeHtml(value)}</a>`
+}
+
+function renderContactSection(): string {
+  const agencyName = contact.agency?.name?.trim() || 'Göran Eliasson'
+  const agencyEmail = renderContactEmailLink(contact.agency?.email)
+  const agencyPhone = renderContactPhoneLink(contact.agency?.phone)
+  const lovisaEmail = renderContactEmailLink(contact.lovisa?.email)
+
+  const agencyLines = [agencyEmail, agencyPhone].filter(Boolean).join('<br />')
+
+  return `
+    <section id="contact" class="bg-sand-100 px-6 py-32">
+      <div class="mx-auto max-w-7xl">
+        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">CONTACT</h2>
+        <div class="contact-layout mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,16rem)_1fr] lg:items-start lg:gap-16">
+          <div class="flex justify-center lg:justify-start">
+            <img
+              src="${AGENCY_LOGO_SRC}"
+              alt="Eliasson Artists Stockholm"
+              class="contact-agency-logo w-full max-w-[16rem] object-contain"
+              loading="lazy"
+            />
+          </div>
+          <div class="min-w-0 text-lg font-light leading-relaxed text-gray-600">
+            <p>
+              Lovisa Huledal is represented by
+              <span class="text-gray-900">${escapeHtml(agencyName)}</span>
+              at Eliasson Artists Stockholm:
+            </p>
+            ${agencyLines ? `<p class="mt-4">${agencyLines}</p>` : ''}
+            <p class="mt-8">
+              If you wish to come in contact with Lovisa herself, please use the information below:
+            </p>
+            ${lovisaEmail ? `<p class="mt-4">${lovisaEmail}</p>` : ''}
+            ${renderContactSocialLinks()}
+          </div>
+        </div>
+      </div>
+    </section>
+  `
+}
+
 function renderAboutSection(): string {
   const { preview, rest, hasMore } = splitBiography(biographyMarkdown())
   const activeClass = 'text-gray-900 border-b border-gray-900'
   const inactiveClass = 'text-gray-400 hover:text-gray-600'
 
   return `
-    <section id="about" class="px-6 py-32">
-      <div class="mx-auto max-w-7xl">
-        <h2 class="select-none mb-12 text-center text-3xl font-light tracking-widest text-gray-900">ABOUT</h2>
-
-        <div class="mb-8 flex justify-end gap-6 text-sm tracking-widest">
+    <section id="about" class="px-6 pt-24 pb-32">
+      <div class="relative mx-auto max-w-7xl">
+        <div class="about-lang absolute right-0 top-0 z-10 flex gap-6 text-sm tracking-widest">
           <button type="button" data-lang="sv" class="cursor-pointer select-none ${language === 'sv' ? activeClass : inactiveClass} transition-colors">SV</button>
           <button type="button" data-lang="en" class="cursor-pointer select-none ${language === 'en' ? activeClass : inactiveClass} transition-colors">EN</button>
         </div>
+
+        <h2 class="select-none mb-12 text-center text-3xl font-light tracking-widest text-gray-900">ABOUT</h2>
 
         <div id="about-bio" class="about-bio" data-expanded="${aboutExpanded}">
           <div class="about-body">
@@ -1102,7 +1728,7 @@ function bindAboutSection(): void {
 
 function renderApp(): void {
   document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-    <header class="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-sm transition-all duration-300 border-b border-white/10">
+    <header data-site-header class="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-sm transition-all duration-300 border-b border-white/10">
       <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center">
         <a href="#" class="text-white text-2xl tracking-[0.2em] font-light hover:text-sand-200 transition-colors">
           LOVISA HULEDAL
@@ -1119,8 +1745,9 @@ function renderApp(): void {
     </header>
 
     <main>
-      <section id="home" class="relative h-screen w-full hero-image flex items-center justify-center">
+      <section id="home" class="relative h-screen w-full hero-image">
         <div class="absolute inset-0 bg-black/20"></div>
+        ${renderHeroTitle()}
       </section>
 
       ${renderAboutSection()}
@@ -1128,13 +1755,42 @@ function renderApp(): void {
       ${renderProgrammesSection()}
 
       ${renderScheduleSection()}
+
+      ${renderListenSection()}
+
+      ${renderPicturesSection()}
+
+      ${renderContactSection()}
     </main>
   `
 }
 
+function syncSiteHeaderHeight(): void {
+  const header = document.querySelector<HTMLElement>('[data-site-header]')
+  if (!header) return
+  document.documentElement.style.setProperty('--site-header-height', `${header.offsetHeight}px`)
+}
+
+function bindSiteHeader(): void {
+  const header = document.querySelector<HTMLElement>('[data-site-header]')
+  if (!header) return
+
+  const update = () => syncSiteHeaderHeight()
+  update()
+  window.addEventListener('resize', update)
+
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(update).observe(header)
+  }
+}
+
 renderApp()
+bindSiteHeader()
 bindAboutSection()
 bindProgrammeTabs()
 bindProgrammeCarousels()
 bindScheduleTabs()
 bindScheduleNavigation()
+bindListenSection()
+bindPicturesSection()
+document.addEventListener('keydown', onMediaOverlayEscape)

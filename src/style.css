@@ -25,6 +25,11 @@ body {
   background-position: center 20%;
 }
 
+/* Top-corner hero title sits below the fixed site header */
+.hero-title--top {
+  top: var(--site-header-height, 7rem);
+}
+
 /* About: mosaic + text side-by-side → image row header + text below (motion via FLIP in JS) */
 .about-text-flow {
   --about-col-gap: 2.5rem;
@@ -220,20 +225,6 @@ body {
   flex: 1;
   min-height: 0;
 }
-
-.programme-upcoming-banner {
-  pointer-events: auto;
-  text-decoration: underline;
-  text-underline-offset: 2px;  
-}
-
-.programme-upcoming-banner:hover {
-	pointer-events: auto;
-	text-decoration: underline;
-	text-underline-offset: 2px;  
-	color: var(--color-sand-50);
-  }
-
 @media (min-width: 1024px) {
   .programme-media-stack {
     min-height: 32rem;
@@ -277,5 +268,46 @@ body {
   .schedule-event--highlight {
     animation: none;
     background-color: var(--color-sand-200);
+  }
+}
+
+/* Listen: thumbnail gallery + full-screen video detail */
+.listen-gallery {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.listen-embed {
+  aspect-ratio: 16 / 9;
+}
+
+body.media-overlay-open {
+  overflow: hidden;
+}
+
+/* Pictures: two large images per row + lightbox */
+.pictures-grid {
+  display: grid;
+  gap: 3rem 2.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .pictures-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pictures-thumb-image {
+  display: block;
+  max-height: min(70vh, 42rem);
+  min-height: 18rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .pictures-thumb-image {
+    min-height: 22rem;
   }
 }
