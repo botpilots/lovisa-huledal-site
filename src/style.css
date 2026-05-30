@@ -117,7 +117,8 @@ body {
   min-height: 0;
 }
 
-@media (min-width: 1024px) {
+/* Side-by-side from sm (640px); stacked collage layout only on phones */
+@media (min-width: 640px) {
   .about-bio:not([data-expanded='true']) .about-text-flow {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
@@ -180,7 +181,7 @@ body {
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 639px) {
   .about-text-flow {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;

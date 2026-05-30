@@ -4,7 +4,7 @@ const TEXT_DELAY_MS = 400
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 function isDesktop() {
-  return window.matchMedia('(min-width: 1024px)').matches
+  return window.matchMedia('(min-width: 640px)').matches
 }
 
 function wait(ms: number) {

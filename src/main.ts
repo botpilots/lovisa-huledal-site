@@ -253,7 +253,7 @@ const SECTION_TITLE_MARGIN = 'mb-8'
 const PROGRAMME_TABS_CLASS =
   'programme-tabs mb-4 grid w-full shrink-0 py-2 lg:mb-8 lg:py-4'
 
-const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-5 md:grid-cols-5 md:items-start md:gap-10'
+const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-5 sm:grid-cols-5 sm:items-start sm:gap-10'
 const PROGRAMME_MEDIA_STACK = 'programme-media-stack'
 const PROGRAMME_MEDIA_STACK_WITH_IMAGE = 'programme-media-stack programme-media-stack--with-carousel'
 const PROGRAMME_TAB_BASE =
@@ -600,7 +600,7 @@ function renderProgrammeRepertoirePanel(entries: ProgrammeRepertoireEntry[]): st
     )
     .join('')
 
-  return `<ul class="grid gap-x-10 gap-y-2 text-base font-light leading-relaxed md:grid-cols-2">${items}</ul>`
+  return `<ul class="grid gap-x-10 gap-y-2 text-base font-light leading-relaxed sm:grid-cols-2">${items}</ul>`
 }
 
 function renderExternalLinkIcon(size = 16): string {
@@ -890,16 +890,16 @@ function renderProgrammeCopyColumn(programme: Programme, copyOrder: string): str
   `
 }
 
-/** Copy 3/5, media 2/5 from md up; single column below md. Alternates left / right on md+. */
+/** Copy 3/5, media 2/5 from sm up; single column below sm. Alternates left / right on sm+. */
 function programmeColumnOrders(index: number): { copy: string; media: string; titleAlign: string } {
   const mediaOnRight = index % 2 === 1
   return {
     copy: mediaOnRight
-      ? 'order-2 md:order-1 md:col-span-3'
-      : 'order-2 md:order-2 md:col-span-3 md:col-start-3',
+      ? 'order-2 sm:order-1 sm:col-span-3'
+      : 'order-2 sm:order-2 sm:col-span-3 sm:col-start-3',
     media: mediaOnRight
-      ? 'order-1 md:order-2 md:col-span-2 md:col-start-4'
-      : 'order-1 md:order-1 md:col-span-2',
+      ? 'order-1 sm:order-2 sm:col-span-2 sm:col-start-4'
+      : 'order-1 sm:order-1 sm:col-span-2',
     titleAlign: mediaOnRight ? 'text-right' : 'text-left',
   }
 }
