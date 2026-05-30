@@ -13,6 +13,11 @@
   --color-sand-900: #5c4b38;
 }
 
+html {
+  /* Anchor / scrollIntoView: section tops sit flush below the fixed site header */
+  scroll-padding-top: var(--site-header-height, 7rem);
+}
+
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #1a1a1a;

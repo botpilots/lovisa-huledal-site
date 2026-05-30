@@ -263,7 +263,6 @@ const PROGRAMME_TAB_INACTIVE = 'text-gray-400 hover:text-gray-600'
 
 type ProgrammeTab = 'description' | 'repertoire'
 
-const SCHEDULE_SCROLL_OFFSET_PX = 96
 const SCHEDULE_HIGHLIGHT_MS = 3200
 const EVENT_DATE_FORMAT = new Intl.DateTimeFormat('sv-SE', {
   day: 'numeric',
@@ -1175,7 +1174,7 @@ function closeListenVideo(): void {
   setMediaOverlayOpen(false)
 
   const section = document.getElementById('listen')
-  if (section) section.scrollIntoView({ behavior: 'instant', block: 'start' })
+  if (section) scrollBelowSiteHeader(section, false)
 }
 
 function photoEntryById(id: string): PhotoEntry | undefined {
@@ -1328,7 +1327,7 @@ function closePicture(): void {
   setMediaOverlayOpen(false)
 
   const section = document.getElementById('pictures')
-  if (section) section.scrollIntoView({ behavior: 'instant', block: 'start' })
+  if (section) scrollBelowSiteHeader(section, false)
 }
 
 function onMediaOverlayEscape(event: KeyboardEvent): void {
@@ -1617,8 +1616,18 @@ function highlightScheduleEventsForProgramme(programmePath: string): void {
   }
 }
 
-function scrollToScheduleTarget(element: HTMLElement, smooth: boolean): void {
-  const y = element.getBoundingClientRect().top + window.scrollY - SCHEDULE_SCROLL_OFFSET_PX
+function getSiteHeaderScrollOffset(): number {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue('--site-header-height')
+    .trim()
+  const parsed = parseFloat(raw)
+  if (!Number.isNaN(parsed) && parsed > 0) return parsed
+  const header = document.querySelector<HTMLElement>('[data-site-header]')
+  return header?.offsetHeight ?? 112
+}
+
+function scrollBelowSiteHeader(element: HTMLElement, smooth: boolean): void {
+  const y = element.getBoundingClientRect().top + window.scrollY - getSiteHeaderScrollOffset()
   window.scrollTo({ top: Math.max(0, y), behavior: smooth ? 'smooth' : 'instant' })
 }
 
@@ -1664,7 +1673,7 @@ function navigateToProgrammeSchedule(programmePath: string): void {
   const firstRow = firstId ? document.getElementById(scheduleEventDomId(firstId)) : null
   const target = firstRow ?? schedule
 
-  scrollToScheduleTarget(target, smooth)
+  scrollBelowSiteHeader(target, smooth)
 
   if (reducedMotion) highlightScheduleEventsForProgramme(programmePath)
   else window.setTimeout(() => highlightScheduleEventsForProgramme(programmePath), 450)
@@ -1699,7 +1708,7 @@ function bindScheduleNavigation(): void {
 
   if (hash === 'schedule') {
     const section = document.getElementById('schedule')
-    if (section) scrollToScheduleTarget(section, !reducedMotion)
+    if (section) scrollBelowSiteHeader(section, !reducedMotion)
     return
   }
 
@@ -1709,7 +1718,7 @@ function bindScheduleNavigation(): void {
   const eventId = row.dataset.eventId
   if (eventId) showScheduleTabForEvent(eventId)
 
-  scrollToScheduleTarget(row, !reducedMotion)
+  scrollBelowSiteHeader(row, !reducedMotion)
   const programmePath = row.dataset.programmePath
   if (programmePath) highlightScheduleEventsForProgramme(programmePath)
 }
