@@ -255,6 +255,7 @@ const PROGRAMME_TABS_CLASS =
   'programme-tabs mb-4 grid w-full shrink-0 py-2 lg:mb-8 lg:py-4'
 
 const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-5 sm:grid-cols-5 sm:items-start sm:gap-10'
+const LISTEN_DETAIL_LAYOUT = 'grid min-w-0 gap-5 lg:grid-cols-2 lg:items-start lg:gap-10'
 const PROGRAMME_MEDIA_STACK = 'programme-media-stack'
 const PROGRAMME_MEDIA_STACK_WITH_IMAGE = 'programme-media-stack programme-media-stack--with-carousel'
 const PROGRAMME_TAB_BASE =
@@ -1100,7 +1101,7 @@ function renderListenDetailShell(): string {
     >
       ${renderMediaCloseButton('data-listen-close', 'Close video')}
       <div class="mx-auto flex min-h-full max-w-7xl flex-col justify-center px-6 py-24 md:py-32">
-        <div class="${PROGRAMME_LAYOUT}">
+        <div class="${LISTEN_DETAIL_LAYOUT}">
           <div class="listen-embed min-w-0 overflow-hidden bg-sand-200">
             <iframe
               data-listen-iframe
@@ -1425,7 +1426,7 @@ function renderContactSocialLinks(): string {
 
   if (!links.length) return ''
 
-  return `<div class="mt-10 flex flex-wrap gap-3">${links.join('')}</div>`
+  return `<div class="mt-10 flex flex-wrap justify-center gap-3 lg:justify-start">${links.join('')}</div>`
 }
 
 function renderContactEmailLink(email: string | undefined): string {
@@ -1461,7 +1462,7 @@ function renderContactSection(): string {
               loading="lazy"
             />
           </div>
-          <div class="min-w-0 text-lg font-light leading-relaxed text-gray-600">
+          <div class="min-w-0 text-center text-lg font-light leading-relaxed text-gray-600 lg:text-left">
             <p>
               Lovisa Huledal is represented by
               <span class="text-gray-900">${escapeHtml(agencyName)}</span>
