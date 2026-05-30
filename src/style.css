@@ -213,40 +213,75 @@ body {
   }
 }
 
-/* Programme media: on mobile, coloured title band ~1/3, image ~2/3 */
+/* Programme media: type scales with column width */
 .programme-media-stack {
+  container-type: inline-size;
+  container-name: programme-media;
   display: flex;
-  min-height: 18rem;
+  width: 100%;
   flex-direction: column;
   overflow: hidden;
 }
 
+.programme-media-group {
+  width: 100%;
+}
+
+.programme-media-stack--title-only {
+  aspect-ratio: 5 / 4;
+}
+
+.programme-media-header {
+  padding: 1.25rem;
+}
+
+.programme-media-title-label {
+  margin-bottom: clamp(0.25rem, 1.2cqi, 0.5rem);
+  font-size: clamp(0.625rem, 2.8cqi, 0.75rem);
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  color: rgb(255 255 255 / 0.8);
+}
+
+.programme-media-title-heading {
+  font-size: clamp(1.0625rem, 7cqi, 1.875rem);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.025em;
+  color: #fff;
+}
+
 .programme-media-stack--title-only .programme-media-header {
+  display: flex;
+  min-height: 0;
   flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom-width: 0;
+}
+
+/* Banner + image: slightly landscape; dots sit below outside this box */
+.programme-media-stack--with-carousel {
+  aspect-ratio: 5 / 4;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.programme-media-frame {
+  position: relative;
+  width: 100%;
   min-height: 0;
 }
-@media (min-width: 1024px) {
-  .programme-media-stack {
-    min-height: 32rem;
-  }
-}
 
-@media (max-width: 1023px) {
-  .programme-media-stack--with-carousel {
-    display: grid;
-    /* Header height = content + padding only; image takes the rest */
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-
-  .programme-media-stack--with-carousel .programme-media-header {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .programme-media-stack--with-carousel .programme-carousel {
-    min-height: 0;
-  }
+.programme-carousel-dots {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-sand-300) 80%, transparent);
+  background-color: var(--color-sand-100);
+  padding-block: 0.5rem;
 }
 
 @keyframes schedule-event-pulse {
