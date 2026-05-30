@@ -277,6 +277,32 @@ body {
   aspect-ratio: 16 / 9;
 }
 
-body.listen-detail-open {
+body.media-overlay-open {
   overflow: hidden;
+}
+
+/* Pictures: two large images per row + lightbox */
+.pictures-grid {
+  display: grid;
+  gap: 3rem 2.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .pictures-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pictures-thumb-image {
+  display: block;
+  max-height: min(70vh, 42rem);
+  min-height: 18rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .pictures-thumb-image {
+    min-height: 22rem;
+  }
 }

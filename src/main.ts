@@ -2,6 +2,7 @@ import './style.css'
 import { animateAboutLayout } from './about-layout-animation'
 import { marked } from 'marked'
 import home from '../content/home.json'
+import photosContent from '../content/photos.json'
 
 type Language = 'sv' | 'en'
 
@@ -84,6 +85,24 @@ interface VideoEntry {
   video: Video
 }
 
+interface PhotoItem {
+  image?: string
+  caption?: string
+}
+
+interface PhotosContent {
+  portraits?: PhotoItem[]
+  onStage?: PhotoItem[]
+}
+
+type PhotoCategory = 'portraits' | 'onStage'
+
+interface PhotoEntry {
+  id: string
+  category: PhotoCategory
+  photo: { image: string; caption?: string }
+}
+
 function cmsPathFromGlob(filePath: string): string {
   return filePath.replace(/^\.\.\//, '')
 }
@@ -131,6 +150,32 @@ const videoEntries: VideoEntry[] = Object.entries(videoModules)
   }))
   .sort((a, b) => a.video.title.trim().localeCompare(b.video.title.trim(), 'sv'))
 
+const PHOTO_CATEGORIES: PhotoCategory[] = ['portraits', 'onStage']
+
+const PHOTO_CATEGORY_LABELS: Record<PhotoCategory, string> = {
+  portraits: 'PORTRAITS',
+  onStage: 'ON STAGE',
+}
+
+function buildPhotoEntries(content: PhotosContent): PhotoEntry[] {
+  const entries: PhotoEntry[] = []
+  for (const category of PHOTO_CATEGORIES) {
+    for (const [index, item] of (content[category] ?? []).entries()) {
+      const image = item.image?.trim()
+      if (!image) continue
+      const caption = item.caption?.trim()
+      entries.push({
+        id: `${category}-${index}`,
+        category,
+        photo: caption ? { image, caption } : { image },
+      })
+    }
+  }
+  return entries
+}
+
+const photoEntries = buildPhotoEntries(photosContent as PhotosContent)
+
 const eventEntries: EventEntry[] = Object.entries(eventModules)
   .map(([filePath, event]) => {
     const id = event.id?.trim() || eventIdFromGlob(filePath)
@@ -172,6 +217,7 @@ const content = home as HomeContent
 let language: Language = 'sv'
 let aboutExpanded = false
 let listenSelectedVideoId: string | null = null
+let picturesSelectedPhotoId: string | null = null
 
 function escapeHtml(text: string): string {
   return text
@@ -890,13 +936,13 @@ function videoEntryById(id: string): VideoEntry | undefined {
   return videoEntries.find((entry) => entry.id === id)
 }
 
-function renderListenCloseButton(): string {
+function renderMediaCloseButton(closeSelector: string, ariaLabel: string): string {
   return `
     <button
       type="button"
-      data-listen-close
-      class="listen-close absolute right-6 top-6 z-10 flex h-10 w-10 cursor-pointer select-none items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-sand-200/80 hover:text-gray-900"
-      aria-label="Close video"
+      ${closeSelector}
+      class="media-close absolute right-6 top-6 z-10 flex h-10 w-10 cursor-pointer select-none items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-sand-200/80 hover:text-gray-900"
+      aria-label="${ariaLabel}"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
         <line x1="18" y1="6" x2="6" y2="18" />
@@ -904,6 +950,10 @@ function renderListenCloseButton(): string {
       </svg>
     </button>
   `
+}
+
+function setMediaOverlayOpen(open: boolean): void {
+  document.body.classList.toggle('media-overlay-open', open)
 }
 
 function renderListenThumbnail(entry: VideoEntry): string {
@@ -960,7 +1010,7 @@ function renderListenDetailShell(): string {
       class="listen-detail fixed inset-0 z-[60] overflow-y-auto bg-sand-100"
       hidden
     >
-      ${renderListenCloseButton()}
+      ${renderMediaCloseButton('data-listen-close', 'Close video')}
       <div class="mx-auto flex min-h-full max-w-7xl flex-col justify-center px-6 py-24 md:py-32">
         <div class="${PROGRAMME_LAYOUT}">
           <div class="listen-embed min-w-0 overflow-hidden bg-sand-200">
@@ -998,9 +1048,6 @@ function renderListenSection(): string {
   `
 }
 
-function setListenDetailOpen(open: boolean): void {
-  document.body.classList.toggle('listen-detail-open', open)
-}
 
 function populateListenDetail(entry: VideoEntry): void {
   const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
@@ -1036,7 +1083,7 @@ function openListenVideo(id: string): void {
   const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
   gallery?.setAttribute('hidden', '')
   detail?.removeAttribute('hidden')
-  setListenDetailOpen(true)
+  setMediaOverlayOpen(true)
 }
 
 function closeListenVideo(): void {
@@ -1049,16 +1096,176 @@ function closeListenVideo(): void {
   const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
   gallery?.removeAttribute('hidden')
   detail?.setAttribute('hidden', '')
-  setListenDetailOpen(false)
+  setMediaOverlayOpen(false)
 
   const section = document.getElementById('listen')
   if (section) section.scrollIntoView({ behavior: 'instant', block: 'start' })
 }
 
-function onListenEscape(event: KeyboardEvent): void {
-  if (event.key !== 'Escape' || !listenSelectedVideoId) return
-  event.preventDefault()
-  closeListenVideo()
+function photoEntryById(id: string): PhotoEntry | undefined {
+  return photoEntries.find((entry) => entry.id === id)
+}
+
+function renderPictureThumbnail(entry: PhotoEntry): string {
+  const { photo, id } = entry
+  const caption = photo.caption
+
+  const captionMarkup = caption
+    ? `<p class="mt-4 text-sm font-light tracking-wide text-gray-500">${escapeHtml(caption)}</p>`
+    : ''
+
+  return `
+    <button
+      type="button"
+      data-pictures-photo="${id}"
+      class="pictures-thumb group flex min-w-0 cursor-pointer flex-col text-left"
+    >
+      <span class="block overflow-hidden bg-sand-200">
+        <img
+          src="${photo.image}"
+          alt="${caption ? escapeHtml(caption) : ''}"
+          class="pictures-thumb-image w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+          loading="lazy"
+        />
+      </span>
+      ${captionMarkup}
+    </button>
+  `
+}
+
+function renderPicturesCategory(category: PhotoCategory): string {
+  const items = photoEntries.filter((entry) => entry.category === category)
+  if (!items.length) return ''
+
+  return `
+    <div class="pictures-category">
+      <h3 class="mb-10 text-center text-sm font-normal tracking-[0.25em] text-sand-800">${PHOTO_CATEGORY_LABELS[category]}</h3>
+      <div class="pictures-grid">
+        ${items.map((entry) => renderPictureThumbnail(entry)).join('')}
+      </div>
+    </div>
+  `
+}
+
+function renderPicturesGallery(): string {
+  const blocks = PHOTO_CATEGORIES.map((category) => renderPicturesCategory(category)).filter(Boolean)
+
+  if (!blocks.length) {
+    return `
+      <p class="text-center text-lg font-light leading-relaxed text-gray-600">
+        No photos listed at the moment.
+      </p>
+    `
+  }
+
+  return `<div class="space-y-20">${blocks.join('')}</div>`
+}
+
+function renderPicturesDetailShell(): string {
+  return `
+    <div
+      data-pictures-detail
+      class="pictures-detail fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-sand-50 px-6 py-24"
+      hidden
+    >
+      ${renderMediaCloseButton('data-pictures-close', 'Close photo')}
+      <figure class="flex w-full max-w-6xl flex-col items-center">
+        <img
+          data-pictures-detail-image
+          alt=""
+          class="pictures-detail-image max-h-[min(85vh,56rem)] w-auto max-w-full object-contain"
+        />
+        <figcaption
+          data-pictures-detail-caption
+          class="mt-6 hidden text-center text-sm font-light tracking-wide text-gray-500"
+        ></figcaption>
+      </figure>
+    </div>
+  `
+}
+
+function renderPicturesSection(): string {
+  return `
+    <section id="pictures" class="bg-sand-50 px-6 py-32">
+      <div class="mx-auto max-w-7xl">
+        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">PICTURES</h2>
+        <div data-pictures-gallery-root>
+          ${renderPicturesGallery()}
+        </div>
+      </div>
+      ${renderPicturesDetailShell()}
+    </section>
+  `
+}
+
+function populatePicturesDetail(entry: PhotoEntry): void {
+  const imageEl = document.querySelector<HTMLImageElement>('[data-pictures-detail-image]')
+  const captionEl = document.querySelector<HTMLElement>('[data-pictures-detail-caption]')
+  if (!imageEl || !captionEl) return
+
+  const { photo } = entry
+  imageEl.src = photo.image
+  const caption = photo.caption
+  if (caption) {
+    captionEl.textContent = caption
+    captionEl.classList.remove('hidden')
+    imageEl.alt = caption
+  } else {
+    captionEl.textContent = ''
+    captionEl.classList.add('hidden')
+    imageEl.alt = ''
+  }
+}
+
+function clearPicturesDetail(): void {
+  const imageEl = document.querySelector<HTMLImageElement>('[data-pictures-detail-image]')
+  if (imageEl) {
+    imageEl.removeAttribute('src')
+    imageEl.alt = ''
+  }
+}
+
+function openPicture(id: string): void {
+  const entry = photoEntryById(id)
+  if (!entry) return
+
+  picturesSelectedPhotoId = id
+  populatePicturesDetail(entry)
+
+  const gallery = document.querySelector<HTMLElement>('[data-pictures-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-pictures-detail]')
+  gallery?.setAttribute('hidden', '')
+  detail?.removeAttribute('hidden')
+  setMediaOverlayOpen(true)
+}
+
+function closePicture(): void {
+  if (!picturesSelectedPhotoId) return
+
+  picturesSelectedPhotoId = null
+  clearPicturesDetail()
+
+  const gallery = document.querySelector<HTMLElement>('[data-pictures-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-pictures-detail]')
+  gallery?.removeAttribute('hidden')
+  detail?.setAttribute('hidden', '')
+  setMediaOverlayOpen(false)
+
+  const section = document.getElementById('pictures')
+  if (section) section.scrollIntoView({ behavior: 'instant', block: 'start' })
+}
+
+function onMediaOverlayEscape(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') return
+  if (listenSelectedVideoId) {
+    event.preventDefault()
+    closeListenVideo()
+    return
+  }
+  if (picturesSelectedPhotoId) {
+    event.preventDefault()
+    closePicture()
+  }
 }
 
 function bindListenSection(): void {
@@ -1073,8 +1280,20 @@ function bindListenSection(): void {
   document.querySelector<HTMLButtonElement>('[data-listen-close]')?.addEventListener('click', () => {
     closeListenVideo()
   })
+}
 
-  document.addEventListener('keydown', onListenEscape)
+function bindPicturesSection(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-pictures-photo]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.picturesPhoto
+      if (!id) return
+      openPicture(id)
+    })
+  })
+
+  document.querySelector<HTMLButtonElement>('[data-pictures-close]')?.addEventListener('click', () => {
+    closePicture()
+  })
 }
 
 function renderAboutSection(): string {
@@ -1384,6 +1603,8 @@ function renderApp(): void {
       ${renderScheduleSection()}
 
       ${renderListenSection()}
+
+      ${renderPicturesSection()}
     </main>
   `
 }
@@ -1395,3 +1616,5 @@ bindProgrammeCarousels()
 bindScheduleTabs()
 bindScheduleNavigation()
 bindListenSection()
+bindPicturesSection()
+document.addEventListener('keydown', onMediaOverlayEscape)
