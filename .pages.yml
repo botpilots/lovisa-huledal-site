@@ -259,11 +259,6 @@ content:
         sort: date
         order: desc
     fields:
-      - name: id
-        label: Event ID
-        description: Optional. Used for schedule links (e.g. #schedule-event-my-id). If empty, the filename is used (e.g. 2026-07-30-la-liberazione).
-        type: string
-
       - name: date
         label: Date
         type: date

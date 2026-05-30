@@ -70,8 +70,6 @@ interface ProgrammeEntry {
 }
 
 interface Event {
-  /** Optional stable id for schedule anchors; defaults to the event filename (without .json). */
-  id?: string
   date: string
   time?: string
   name?: string
@@ -82,7 +80,7 @@ interface Event {
 }
 
 interface EventEntry {
-  /** Same as `id` on the JSON file, or derived from filename e.g. `2026-07-30-la-liberazione`. */
+  /** Derived from the event filename without `.json`, e.g. `2026-07-30-la-liberazione`. */
   id: string
   path: string
   event: Event
@@ -230,7 +228,7 @@ const photoEntries = buildPhotoEntries(photosContent as PhotosContent)
 
 const eventEntries: EventEntry[] = Object.entries(eventModules)
   .map(([filePath, event]) => {
-    const id = event.id?.trim() || eventIdFromGlob(filePath)
+    const id = eventIdFromGlob(filePath)
     return {
       id,
       path: cmsPathFromGlob(filePath),
