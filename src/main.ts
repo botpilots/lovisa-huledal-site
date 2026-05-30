@@ -72,6 +72,18 @@ interface EventEntry {
   event: Event
 }
 
+interface Video {
+  youtubeLink: string
+  title: string
+  description: string
+}
+
+interface VideoEntry {
+  id: string
+  path: string
+  video: Video
+}
+
 function cmsPathFromGlob(filePath: string): string {
   return filePath.replace(/^\.\.\//, '')
 }
@@ -79,6 +91,10 @@ function cmsPathFromGlob(filePath: string): string {
 function eventIdFromGlob(filePath: string): string {
   const base = filePath.split('/').pop() ?? filePath
   return base.replace(/\.json$/i, '')
+}
+
+function videoIdFromGlob(filePath: string): string {
+  return eventIdFromGlob(filePath)
 }
 
 function scheduleEventDomId(eventId: string): string {
@@ -101,6 +117,19 @@ const eventModules = import.meta.glob<Event>('../content/events/*.json', {
   eager: true,
   import: 'default',
 })
+
+const videoModules = import.meta.glob<Video>('../content/videos/*.json', {
+  eager: true,
+  import: 'default',
+})
+
+const videoEntries: VideoEntry[] = Object.entries(videoModules)
+  .map(([filePath, video]) => ({
+    id: videoIdFromGlob(filePath),
+    path: cmsPathFromGlob(filePath),
+    video,
+  }))
+  .sort((a, b) => a.video.title.trim().localeCompare(b.video.title.trim(), 'sv'))
 
 const eventEntries: EventEntry[] = Object.entries(eventModules)
   .map(([filePath, event]) => {
@@ -142,6 +171,40 @@ const content = home as HomeContent
 
 let language: Language = 'sv'
 let aboutExpanded = false
+let listenSelectedVideoId: string | null = null
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function youtubeVideoId(url: string): string | null {
+  try {
+    const parsed = new URL(url.trim())
+    if (parsed.hostname === 'youtu.be') {
+      const id = parsed.pathname.replace(/^\//, '').split('/')[0]
+      return id || null
+    }
+    const fromQuery = parsed.searchParams.get('v')
+    if (fromQuery) return fromQuery
+    const embedMatch = parsed.pathname.match(/\/embed\/([^/?]+)/)
+    if (embedMatch?.[1]) return embedMatch[1]
+  } catch {
+    return null
+  }
+  return null
+}
+
+function youtubeThumbnailUrl(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+}
+
+function youtubeEmbedUrl(videoId: string): string {
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`
+}
 
 function biographyMarkdown() {
   return language === 'sv' ? content.biography : content.biographyEn
@@ -823,6 +886,197 @@ function renderMosaic(): string {
   `
 }
 
+function videoEntryById(id: string): VideoEntry | undefined {
+  return videoEntries.find((entry) => entry.id === id)
+}
+
+function renderListenCloseButton(): string {
+  return `
+    <button
+      type="button"
+      data-listen-close
+      class="listen-close absolute right-6 top-6 z-10 flex h-10 w-10 cursor-pointer select-none items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-sand-200/80 hover:text-gray-900"
+      aria-label="Close video"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  `
+}
+
+function renderListenThumbnail(entry: VideoEntry): string {
+  const { video, id } = entry
+  const ytId = youtubeVideoId(video.youtubeLink)
+  if (!ytId) return ''
+
+  const title = video.title.trim()
+
+  return `
+    <button
+      type="button"
+      data-listen-video="${id}"
+      class="listen-thumb group flex min-w-0 cursor-pointer flex-col text-left transition-opacity hover:opacity-90"
+    >
+      <span class="listen-thumb-media relative block aspect-video overflow-hidden bg-sand-200">
+        <img
+          src="${youtubeThumbnailUrl(ytId)}"
+          alt=""
+          class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          loading="lazy"
+        />
+        <span class="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors group-hover:bg-black/25" aria-hidden="true">
+          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+        </span>
+      </span>
+      <span class="mt-3 text-base font-light leading-snug text-gray-900">${escapeHtml(title)}</span>
+    </button>
+  `
+}
+
+function renderListenGallery(): string {
+  const items = videoEntries.map((entry) => renderListenThumbnail(entry)).filter(Boolean)
+
+  if (!items.length) {
+    return `
+      <p class="text-center text-lg font-light leading-relaxed text-gray-600">
+        No videos listed at the moment.
+      </p>
+    `
+  }
+
+  return `<div class="listen-gallery">${items.join('')}</div>`
+}
+
+function renderListenDetailShell(): string {
+  return `
+    <div
+      data-listen-detail
+      class="listen-detail fixed inset-0 z-[60] overflow-y-auto bg-sand-100"
+      hidden
+    >
+      ${renderListenCloseButton()}
+      <div class="mx-auto flex min-h-full max-w-7xl flex-col justify-center px-6 py-24 md:py-32">
+        <div class="${PROGRAMME_LAYOUT}">
+          <div class="listen-embed min-w-0 overflow-hidden bg-sand-200">
+            <iframe
+              data-listen-iframe
+              class="listen-embed-frame h-full w-full"
+              title=""
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              referrerpolicy="strict-origin-when-cross-origin"
+            ></iframe>
+          </div>
+          <div class="min-w-0">
+            <p class="mb-2 text-xs font-normal tracking-[0.25em] text-sand-700">LISTEN</p>
+            <h3 data-listen-detail-title class="mb-6 text-2xl font-light leading-tight tracking-wide text-gray-900 md:text-3xl"></h3>
+            <div data-listen-detail-description class="${BIOGRAPHY_PROSE}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+function renderListenSection(): string {
+  return `
+    <section id="listen" class="bg-sand-100 px-6 py-32">
+      <div class="mx-auto max-w-7xl">
+        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">LISTEN</h2>
+        <div data-listen-gallery-root>
+          ${renderListenGallery()}
+        </div>
+      </div>
+      ${renderListenDetailShell()}
+    </section>
+  `
+}
+
+function setListenDetailOpen(open: boolean): void {
+  document.body.classList.toggle('listen-detail-open', open)
+}
+
+function populateListenDetail(entry: VideoEntry): void {
+  const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
+  const iframe = document.querySelector<HTMLIFrameElement>('[data-listen-iframe]')
+  const titleEl = document.querySelector<HTMLElement>('[data-listen-detail-title]')
+  const descriptionEl = document.querySelector<HTMLElement>('[data-listen-detail-description]')
+  if (!detail || !iframe || !titleEl || !descriptionEl) return
+
+  const { video } = entry
+  const ytId = youtubeVideoId(video.youtubeLink)
+  if (!ytId) return
+
+  const title = video.title.trim()
+  iframe.title = title
+  iframe.src = youtubeEmbedUrl(ytId)
+  titleEl.textContent = title
+  descriptionEl.innerHTML = `<p>${escapeHtml(video.description.trim())}</p>`
+}
+
+function clearListenDetail(): void {
+  const iframe = document.querySelector<HTMLIFrameElement>('[data-listen-iframe]')
+  if (iframe) iframe.src = ''
+}
+
+function openListenVideo(id: string): void {
+  const entry = videoEntryById(id)
+  if (!entry) return
+
+  listenSelectedVideoId = id
+  populateListenDetail(entry)
+
+  const gallery = document.querySelector<HTMLElement>('[data-listen-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
+  gallery?.setAttribute('hidden', '')
+  detail?.removeAttribute('hidden')
+  setListenDetailOpen(true)
+}
+
+function closeListenVideo(): void {
+  if (!listenSelectedVideoId) return
+
+  listenSelectedVideoId = null
+  clearListenDetail()
+
+  const gallery = document.querySelector<HTMLElement>('[data-listen-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-listen-detail]')
+  gallery?.removeAttribute('hidden')
+  detail?.setAttribute('hidden', '')
+  setListenDetailOpen(false)
+
+  const section = document.getElementById('listen')
+  if (section) section.scrollIntoView({ behavior: 'instant', block: 'start' })
+}
+
+function onListenEscape(event: KeyboardEvent): void {
+  if (event.key !== 'Escape' || !listenSelectedVideoId) return
+  event.preventDefault()
+  closeListenVideo()
+}
+
+function bindListenSection(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-listen-video]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.listenVideo
+      if (!id) return
+      openListenVideo(id)
+    })
+  })
+
+  document.querySelector<HTMLButtonElement>('[data-listen-close]')?.addEventListener('click', () => {
+    closeListenVideo()
+  })
+
+  document.addEventListener('keydown', onListenEscape)
+}
+
 function renderAboutSection(): string {
   const { preview, rest, hasMore } = splitBiography(biographyMarkdown())
   const activeClass = 'text-gray-900 border-b border-gray-900'
@@ -1128,6 +1382,8 @@ function renderApp(): void {
       ${renderProgrammesSection()}
 
       ${renderScheduleSection()}
+
+      ${renderListenSection()}
     </main>
   `
 }
@@ -1138,3 +1394,4 @@ bindProgrammeTabs()
 bindProgrammeCarousels()
 bindScheduleTabs()
 bindScheduleNavigation()
+bindListenSection()

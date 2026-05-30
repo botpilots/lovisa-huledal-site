@@ -220,20 +220,6 @@ body {
   flex: 1;
   min-height: 0;
 }
-
-.programme-upcoming-banner {
-  pointer-events: auto;
-  text-decoration: underline;
-  text-underline-offset: 2px;  
-}
-
-.programme-upcoming-banner:hover {
-	pointer-events: auto;
-	text-decoration: underline;
-	text-underline-offset: 2px;  
-	color: var(--color-sand-50);
-  }
-
 @media (min-width: 1024px) {
   .programme-media-stack {
     min-height: 32rem;
@@ -278,4 +264,19 @@ body {
     animation: none;
     background-color: var(--color-sand-200);
   }
+}
+
+/* Listen: thumbnail gallery + full-screen video detail */
+.listen-gallery {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.listen-embed {
+  aspect-ratio: 16 / 9;
+}
+
+body.listen-detail-open {
+  overflow: hidden;
 }
