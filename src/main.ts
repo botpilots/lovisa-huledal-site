@@ -2,6 +2,7 @@ import './style.css'
 import { animateAboutLayout } from './about-layout-animation'
 import { marked } from 'marked'
 import home from '../content/home.json'
+import contactData from '../content/contact.json'
 import photosContent from '../content/photos.json'
 
 type Language = 'sv' | 'en'
@@ -102,6 +103,32 @@ interface PhotoEntry {
   category: PhotoCategory
   photo: { image: string; caption?: string }
 }
+
+interface ContactPerson {
+  name?: string
+  email?: string
+  phone?: string
+}
+
+interface ContactContent {
+  agency: ContactPerson
+  lovisa: ContactPerson
+  socialMedia?: {
+    facebook?: string
+    instagram?: string
+    youtube?: string
+  }
+}
+
+const AGENCY_LOGO_SRC = '/media/c50241_ff6d03952d35443998f5dca8861f44e6~mv2.avif'
+
+const SOCIAL_ICON_SRC = {
+  facebook: '/media/facebook.svg',
+  youtube: '/media/youtube.svg',
+  instagram: '/media/instagram.svg',
+} as const
+
+const contact = contactData as ContactContent
 
 function cmsPathFromGlob(filePath: string): string {
   return filePath.replace(/^\.\.\//, '')
@@ -1296,6 +1323,102 @@ function bindPicturesSection(): void {
   })
 }
 
+const CONTACT_LINK_CLASS =
+  'text-sand-800 underline decoration-sand-300 underline-offset-4 transition-colors hover:text-gray-900'
+
+function telHref(phone: string): string {
+  const normalized = phone.trim().replace(/[^\d+]/g, '')
+  return normalized ? `tel:${normalized}` : '#'
+}
+
+function renderContactSocialLink(
+  url: string | undefined,
+  iconSrc: string,
+  label: string,
+): string {
+  const href = url?.trim()
+  if (!href) return ''
+
+  return `
+    <a
+      href="${href}"
+      class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-sand-300/90 transition-colors hover:border-sand-600 hover:bg-sand-200/60"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="${label} (opens in new tab)"
+    >
+      <img src="${iconSrc}" alt="" class="h-5 w-5" width="20" height="20" loading="lazy" />
+    </a>
+  `
+}
+
+function renderContactSocialLinks(): string {
+  const { socialMedia } = contact
+  if (!socialMedia) return ''
+
+  const links = [
+    renderContactSocialLink(socialMedia.facebook, SOCIAL_ICON_SRC.facebook, 'Facebook'),
+    renderContactSocialLink(socialMedia.youtube, SOCIAL_ICON_SRC.youtube, 'YouTube'),
+    renderContactSocialLink(socialMedia.instagram, SOCIAL_ICON_SRC.instagram, 'Instagram'),
+  ].filter(Boolean)
+
+  if (!links.length) return ''
+
+  return `<div class="mt-10 flex flex-wrap gap-3">${links.join('')}</div>`
+}
+
+function renderContactEmailLink(email: string | undefined): string {
+  const value = email?.trim()
+  if (!value) return ''
+  return `<a href="mailto:${encodeURIComponent(value)}" class="${CONTACT_LINK_CLASS}">${escapeHtml(value)}</a>`
+}
+
+function renderContactPhoneLink(phone: string | undefined): string {
+  const value = phone?.trim()
+  if (!value) return ''
+  return `<a href="${telHref(value)}" class="${CONTACT_LINK_CLASS}">${escapeHtml(value)}</a>`
+}
+
+function renderContactSection(): string {
+  const agencyName = contact.agency?.name?.trim() || 'Göran Eliasson'
+  const agencyEmail = renderContactEmailLink(contact.agency?.email)
+  const agencyPhone = renderContactPhoneLink(contact.agency?.phone)
+  const lovisaEmail = renderContactEmailLink(contact.lovisa?.email)
+
+  const agencyLines = [agencyEmail, agencyPhone].filter(Boolean).join('<br />')
+
+  return `
+    <section id="contact" class="bg-sand-100 px-6 py-32">
+      <div class="mx-auto max-w-7xl">
+        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">CONTACT</h2>
+        <div class="contact-layout mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,16rem)_1fr] lg:items-start lg:gap-16">
+          <div class="flex justify-center lg:justify-start">
+            <img
+              src="${AGENCY_LOGO_SRC}"
+              alt="Eliasson Artists Stockholm"
+              class="contact-agency-logo w-full max-w-[16rem] object-contain"
+              loading="lazy"
+            />
+          </div>
+          <div class="min-w-0 text-lg font-light leading-relaxed text-gray-600">
+            <p>
+              Lovisa Huledal is represented by
+              <span class="text-gray-900">${escapeHtml(agencyName)}</span>
+              at Eliasson Artists Stockholm:
+            </p>
+            ${agencyLines ? `<p class="mt-4">${agencyLines}</p>` : ''}
+            <p class="mt-8">
+              If you wish to come in contact with Lovisa herself, please use the information below:
+            </p>
+            ${lovisaEmail ? `<p class="mt-4">${lovisaEmail}</p>` : ''}
+            ${renderContactSocialLinks()}
+          </div>
+        </div>
+      </div>
+    </section>
+  `
+}
+
 function renderAboutSection(): string {
   const { preview, rest, hasMore } = splitBiography(biographyMarkdown())
   const activeClass = 'text-gray-900 border-b border-gray-900'
@@ -1605,6 +1728,8 @@ function renderApp(): void {
       ${renderListenSection()}
 
       ${renderPicturesSection()}
+
+      ${renderContactSection()}
     </main>
   `
 }
