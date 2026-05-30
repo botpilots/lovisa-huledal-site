@@ -20,7 +20,7 @@ body {
 }
 
 .hero-image {
-  background-image: url('/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg');
+  background-image: var(--hero-background-image);
   background-size: cover;
   background-position: center 20%;
 }

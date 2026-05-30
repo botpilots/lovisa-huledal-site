@@ -131,6 +131,8 @@ interface ContactContent {
   }
 }
 
+const HERO_BACKGROUND_IMAGE = '/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg'
+
 const AGENCY_LOGO_SRC = '/media/c50241_ff6d03952d35443998f5dca8861f44e6~mv2.avif'
 
 const SOCIAL_ICON_SRC = {
@@ -138,6 +140,20 @@ const SOCIAL_ICON_SRC = {
   youtube: '/media/youtube.svg',
   instagram: '/media/instagram.svg',
 } as const
+
+/** Resolve CMS / public paths for the current deploy base (e.g. GitHub Pages /repo/). */
+function assetUrl(path: string): string {
+  const trimmed = path.trim()
+  if (!trimmed || /^https?:\/\//i.test(trimmed)) return trimmed
+  const base = import.meta.env.BASE_URL
+  const relative = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed
+  return `${base}${relative}`
+}
+
+document.documentElement.style.setProperty(
+  '--hero-background-image',
+  `url(${assetUrl(HERO_BACKGROUND_IMAGE)})`,
+)
 
 const contact = contactData as ContactContent
 
@@ -530,7 +546,7 @@ function renderProgrammeCarousel(images: ProgrammeImage[]): string {
       (img, i) => `
         <img
           data-carousel-slide="${i}"
-          src="${img.image}"
+          src="${assetUrl(img.image!)}"
           alt=""
           style="${imageObjectPosition(img)}"
           class="programme-carousel-slide absolute inset-0 h-full w-full object-cover"
@@ -968,7 +984,7 @@ function renderMosaic(): string {
 
   const cell = (photo: MosaicImage | undefined) => {
     if (!photo?.image) return ''
-    return `<img src="${photo.image}" alt="${photo.alt ?? ''}" style="${imageObjectPosition(photo)}" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />`
+    return `<img src="${assetUrl(photo.image)}" alt="${photo.alt ?? ''}" style="${imageObjectPosition(photo)}" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />`
   }
 
   return `
@@ -1179,7 +1195,7 @@ function renderPictureThumbnail(entry: PhotoEntry): string {
     >
       <span class="block overflow-hidden bg-sand-200">
         <img
-          src="${photo.image}"
+          src="${assetUrl(photo.image)}"
           alt="${caption ? escapeHtml(caption) : ''}"
           class="pictures-thumb-image w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
           loading="lazy"
@@ -1261,7 +1277,7 @@ function populatePicturesDetail(entry: PhotoEntry): void {
   if (!imageEl || !captionEl) return
 
   const { photo } = entry
-  imageEl.src = photo.image
+  imageEl.src = assetUrl(photo.image)
   const caption = photo.caption
   if (caption) {
     captionEl.textContent = caption
@@ -1377,7 +1393,7 @@ function renderContactSocialLink(
       rel="noopener noreferrer"
       aria-label="${label} (opens in new tab)"
     >
-      <img src="${iconSrc}" alt="" class="h-5 w-5" width="20" height="20" loading="lazy" />
+      <img src="${assetUrl(iconSrc)}" alt="" class="h-5 w-5" width="20" height="20" loading="lazy" />
     </a>
   `
 }
@@ -1424,7 +1440,7 @@ function renderContactSection(): string {
         <div class="contact-layout mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,16rem)_1fr] lg:items-start lg:gap-16">
           <div class="flex justify-center lg:justify-start">
             <img
-              src="${AGENCY_LOGO_SRC}"
+              src="${assetUrl(AGENCY_LOGO_SRC)}"
               alt="Eliasson Artists Stockholm"
               class="contact-agency-logo w-full max-w-[16rem] object-contain"
               loading="lazy"
