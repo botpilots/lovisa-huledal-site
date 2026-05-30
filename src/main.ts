@@ -19,6 +19,7 @@ type HeroTitlePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-righ
 interface HomeContent {
   title?: string
   titlePosition?: string
+  heroImage?: MosaicImage
   biography: string
   biographyEn: string
   aboutMosaic: MosaicImage[]
@@ -131,7 +132,7 @@ interface ContactContent {
   }
 }
 
-const HERO_BACKGROUND_IMAGE = '/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg'
+const DEFAULT_HERO_IMAGE = '/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg'
 
 const AGENCY_LOGO_SRC = '/media/c50241_ff6d03952d35443998f5dca8861f44e6~mv2.avif'
 
@@ -149,11 +150,6 @@ function assetUrl(path: string): string {
   const relative = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed
   return `${base}${relative}`
 }
-
-document.documentElement.style.setProperty(
-  '--hero-background-image',
-  `url(${assetUrl(HERO_BACKGROUND_IMAGE)})`,
-)
 
 const contact = contactData as ContactContent
 
@@ -248,8 +244,13 @@ const eventEntries: EventEntry[] = Object.entries(eventModules)
 const BIOGRAPHY_PROSE =
   'biography-prose text-lg font-light leading-relaxed text-gray-600 [&_h5]:text-lg [&_h5]:font-normal [&_h5]:text-gray-900 [&_h5]:mb-6 [&_p]:mb-6 [&_p:last-child]:mb-0 [&_em]:italic [&_ul]:mb-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2'
 
-const SECTION_PADDING_Y = 'py-16'
-const SECTION_TITLE_MARGIN = 'mb-8'
+/** Desktop: extra section padding; top −10% vs even 5.25rem, title gap +10% vs 3.25rem */
+const SECTION_PADDING_Y = 'py-16 md:pt-[4.725rem] md:pb-[5.25rem]'
+const SECTION_TITLE_MARGIN = 'mb-8 md:mb-[3.575rem]'
+const ABOUT_SECTION_PADDING = 'pt-12 pb-16 md:pt-[3.825rem] md:pb-[5.25rem]'
+const ABOUT_SECTION_TITLE_MARGIN = 'mb-12 md:mb-[4.675rem]'
+const SECTION_CONTENT_STACK = 'space-y-12 md:space-y-[4.25rem]'
+const PICTURES_CONTENT_STACK = 'space-y-20 md:space-y-[6.25rem]'
 const PROGRAMME_TABS_CLASS =
   'programme-tabs mb-4 grid w-full shrink-0 py-2 lg:mb-8 lg:py-4'
 
@@ -271,6 +272,18 @@ const EVENT_DATE_FORMAT = new Intl.DateTimeFormat('sv-SE', {
 })
 
 const content = home as HomeContent
+
+function syncHeroBackground(): void {
+  const hero = content.heroImage
+  const image = hero?.image?.trim() || DEFAULT_HERO_IMAGE
+  const x = hero?.offsetX ?? 50
+  const y = hero?.offsetY ?? 20
+  document.documentElement.style.setProperty(
+    '--hero-background-image',
+    `url(${assetUrl(image)})`,
+  )
+  document.documentElement.style.setProperty('--hero-background-position', `${x}% ${y}%`)
+}
 
 let language: Language = 'sv'
 let aboutExpanded = false
@@ -973,7 +986,7 @@ function renderProgrammesSection(): string {
     <section id="programmes" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
         <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">PROGRAMMES</h2>
-        <div class="space-y-12">
+        <div class="${SECTION_CONTENT_STACK}">
           ${programmeEntries.map((entry, index) => renderProgramme(entry, index, headerColors[index]!)).join('')}
         </div>
       </div>
@@ -1233,7 +1246,7 @@ function renderPicturesGallery(): string {
     `
   }
 
-  return `<div class="space-y-20">${blocks.join('')}</div>`
+  return `<div class="${PICTURES_CONTENT_STACK}">${blocks.join('')}</div>`
 }
 
 function renderPicturesDetailShell(): string {
@@ -1473,14 +1486,14 @@ function renderAboutSection(): string {
   const inactiveClass = 'text-gray-400 hover:text-gray-600'
 
   return `
-    <section id="about" class="px-6 pt-12 pb-16">
+    <section id="about" class="px-6 ${ABOUT_SECTION_PADDING}">
       <div class="relative mx-auto max-w-7xl">
         <div class="about-lang absolute right-0 top-0 z-10 flex gap-6 text-sm tracking-widest">
           <button type="button" data-lang="sv" class="cursor-pointer select-none ${language === 'sv' ? activeClass : inactiveClass} transition-colors">SV</button>
           <button type="button" data-lang="en" class="cursor-pointer select-none ${language === 'en' ? activeClass : inactiveClass} transition-colors">EN</button>
         </div>
 
-        <h2 class="select-none mb-12 text-center text-3xl font-light tracking-widest text-gray-900">ABOUT</h2>
+        <h2 class="select-none ${ABOUT_SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">ABOUT</h2>
 
         <div id="about-bio" class="about-bio" data-expanded="${aboutExpanded}">
           <div class="about-body">
@@ -1777,7 +1790,7 @@ function renderApp(): void {
     </header>
 
     <main>
-      <section id="home" class="relative h-screen w-full hero-image">
+      <section id="home" class="relative h-screen w-full hero-image md:mb-5">
         <div class="absolute inset-0 bg-black/20"></div>
         ${renderHeroTitle()}
       </section>
@@ -1816,6 +1829,7 @@ function bindSiteHeader(): void {
   }
 }
 
+syncHeroBackground()
 renderApp()
 bindSiteHeader()
 bindAboutSection()

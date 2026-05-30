@@ -47,6 +47,29 @@ content:
             - bottom-left
             - bottom-right
 
+      - name: heroImage
+        label: Front page image
+        description: Full-screen landing photo behind the hero title.
+        type: object
+        fields:
+          - name: image
+            label: Image
+            type: image
+
+          - name: offsetX
+            label: Horizontal focus (%) (left = 0, right = 100)
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical focus (%) (higher = lower)
+            type: number
+            options:
+              min: 0
+              max: 100
+
       - name: biography
         label: Biography (Swedish)
         type: rich-text

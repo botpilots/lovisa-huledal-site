@@ -27,7 +27,7 @@ body {
 .hero-image {
   background-image: var(--hero-background-image);
   background-size: cover;
-  background-position: center 20%;
+  background-position: var(--hero-background-position, 50% 20%);
 }
 
 /* Top-corner hero title sits below the fixed site header */
@@ -312,11 +312,28 @@ body {
   }
 }
 
-/* Listen: thumbnail gallery + full-screen video detail */
+/* Listen: flex grid — incomplete last row stays centered (e.g. 2 videos on row 2) */
 .listen-gallery {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 2rem;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.listen-gallery > .listen-thumb {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .listen-gallery > .listen-thumb {
+    width: calc((100% - 2rem) / 2);
+  }
+}
+
+@media (min-width: 1024px) {
+  .listen-gallery > .listen-thumb {
+    width: calc((100% - 6rem) / 4);
+  }
 }
 
 .listen-embed {
