@@ -232,7 +232,12 @@ const eventEntries: EventEntry[] = Object.entries(eventModules)
 const BIOGRAPHY_PROSE =
   'biography-prose text-lg font-light leading-relaxed text-gray-600 [&_h5]:text-lg [&_h5]:font-normal [&_h5]:text-gray-900 [&_h5]:mb-6 [&_p]:mb-6 [&_p:last-child]:mb-0 [&_em]:italic [&_ul]:mb-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2'
 
-const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-10 lg:grid-cols-2 lg:items-start lg:gap-10'
+const SECTION_PADDING_Y = 'py-16'
+const SECTION_TITLE_MARGIN = 'mb-8'
+const PROGRAMME_TABS_CLASS =
+  'programme-tabs mb-4 grid w-full shrink-0 py-2 lg:mb-8 lg:py-4'
+
+const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-5 lg:grid-cols-2 lg:items-start lg:gap-10'
 const PROGRAMME_MEDIA_STACK = 'programme-media-stack'
 const PROGRAMME_MEDIA_STACK_WITH_IMAGE = 'programme-media-stack programme-media-stack--with-carousel'
 const PROGRAMME_TAB_BASE =
@@ -696,9 +701,9 @@ function renderScheduleSection(): string {
 
   if (!hasAny) {
     return `
-      <section id="schedule" class="bg-sand-50 px-6 py-32">
+      <section id="schedule" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
         <div class="mx-auto max-w-4xl text-center">
-          <h2 class="mb-8 text-3xl font-light tracking-widest text-gray-900">SCHEDULE</h2>
+          <h2 class="${SECTION_TITLE_MARGIN} text-3xl font-light tracking-widest text-gray-900">SCHEDULE</h2>
           <p class="text-lg font-light leading-relaxed text-gray-600">
             No performances listed at the moment.
           </p>
@@ -708,12 +713,12 @@ function renderScheduleSection(): string {
   }
 
   return `
-    <section id="schedule" class="bg-sand-50 px-6 py-32">
+    <section id="schedule" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-5xl">
-        <h2 class="mb-12 text-center text-3xl font-light tracking-widest text-gray-900">SCHEDULE</h2>
+        <h2 class="${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">SCHEDULE</h2>
         <div data-schedule-root data-active-tab="${active}">
           <div
-            class="programme-tabs mb-8 grid w-full max-w-md mx-auto shrink-0 py-4"
+            class="${PROGRAMME_TABS_CLASS} mx-auto max-w-md"
             role="tablist"
             style="grid-template-columns: repeat(2, minmax(0, 1fr))"
           >
@@ -840,7 +845,7 @@ function renderProgrammeCopyColumn(programme: Programme, copyOrder: string): str
   const tabsMarkup = showTabs
     ? `
         <div
-          class="programme-tabs mb-8 grid w-full shrink-0 py-4"
+          class="${PROGRAMME_TABS_CLASS}"
           role="tablist"
           style="grid-template-columns: repeat(${available.length}, minmax(0, 1fr))"
         >
@@ -934,7 +939,7 @@ function renderProgrammeMedia(
 function renderProgramme(entry: ProgrammeEntry, index: number, headerColor: string): string {
   const { programme, path } = entry
   const { copy } = programmeColumnOrders(index)
-  const divider = index > 0 ? 'border-t border-sand-300/60 pt-24' : ''
+  const divider = index > 0 ? 'border-t border-sand-300/60 pt-12' : ''
 
   return `
     <article class="${divider}">
@@ -952,10 +957,10 @@ function renderProgrammesSection(): string {
   const headerColors = assignProgrammeHeaderColors(programmeEntries)
 
   return `
-    <section id="programmes" class="bg-sand-100 px-6 py-32">
+    <section id="programmes" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">PROGRAMMES</h2>
-        <div class="space-y-24">
+        <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">PROGRAMMES</h2>
+        <div class="space-y-12">
           ${programmeEntries.map((entry, index) => renderProgramme(entry, index, headerColors[index]!)).join('')}
         </div>
       </div>
@@ -1093,9 +1098,9 @@ function renderListenDetailShell(): string {
 
 function renderListenSection(): string {
   return `
-    <section id="listen" class="bg-sand-100 px-6 py-32">
+    <section id="listen" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">LISTEN</h2>
+        <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">LISTEN</h2>
         <div data-listen-gallery-root>
           ${renderListenGallery()}
         </div>
@@ -1243,9 +1248,9 @@ function renderPicturesDetailShell(): string {
 
 function renderPicturesSection(): string {
   return `
-    <section id="pictures" class="bg-sand-50 px-6 py-32">
+    <section id="pictures" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">PICTURES</h2>
+        <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">PICTURES</h2>
         <div data-pictures-gallery-root>
           ${renderPicturesGallery()}
         </div>
@@ -1418,9 +1423,9 @@ function renderContactSection(): string {
   const agencyLines = [agencyEmail, agencyPhone].filter(Boolean).join('<br />')
 
   return `
-    <section id="contact" class="bg-sand-100 px-6 py-32">
+    <section id="contact" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="select-none mb-16 text-center text-3xl font-light tracking-widest text-gray-900">CONTACT</h2>
+        <h2 class="select-none ${SECTION_TITLE_MARGIN} text-center text-3xl font-light tracking-widest text-gray-900">CONTACT</h2>
         <div class="contact-layout mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,16rem)_1fr] lg:items-start lg:gap-16">
           <div class="flex justify-center lg:justify-start">
             <img
@@ -1455,7 +1460,7 @@ function renderAboutSection(): string {
   const inactiveClass = 'text-gray-400 hover:text-gray-600'
 
   return `
-    <section id="about" class="px-6 pt-24 pb-32">
+    <section id="about" class="px-6 pt-12 pb-16">
       <div class="relative mx-auto max-w-7xl">
         <div class="about-lang absolute right-0 top-0 z-10 flex gap-6 text-sm tracking-widest">
           <button type="button" data-lang="sv" class="cursor-pointer select-none ${language === 'sv' ? activeClass : inactiveClass} transition-colors">SV</button>
@@ -1729,17 +1734,21 @@ function bindAboutSection(): void {
 function renderApp(): void {
   document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <header data-site-header class="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-sm transition-all duration-300 border-b border-white/10">
-      <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center">
-        <a href="#" class="text-white text-2xl tracking-[0.2em] font-light hover:text-sand-200 transition-colors">
+      <div class="mx-auto flex max-w-7xl flex-col items-center px-6 py-4 md:flex-row md:justify-between md:py-6">
+        <a href="#" class="text-center text-xl tracking-[0.2em] font-light text-white transition-colors hover:text-sand-200 sm:text-2xl">
           LOVISA HULEDAL
         </a>
-        <nav class="mt-4 md:mt-0 flex gap-8 text-sm tracking-widest text-gray-200">
-          <a href="#about" class="hover:text-white transition-colors">ABOUT</a>
-          <a href="#programmes" class="hover:text-white transition-colors">PROGRAMMES</a>
-          <a href="#schedule" class="hover:text-white transition-colors">SCHEDULE</a>
-          <a href="#listen" class="hover:text-white transition-colors">LISTEN</a>
-          <a href="#pictures" class="hover:text-white transition-colors">PICTURES</a>
-          <a href="#contact" class="hover:text-white transition-colors">CONTACT</a>
+        <nav class="site-nav mt-3 flex w-full flex-col items-center gap-3 text-xs tracking-wide text-gray-200 sm:text-sm md:mt-0 md:w-auto md:flex-row md:justify-end md:gap-8 md:tracking-widest">
+          <div class="site-nav-row flex justify-center gap-6 md:contents">
+            <a href="#about" class="hover:text-white transition-colors">ABOUT</a>
+            <a href="#programmes" class="hover:text-white transition-colors">PROGRAMMES</a>
+            <a href="#schedule" class="hover:text-white transition-colors">SCHEDULE</a>
+          </div>
+          <div class="site-nav-row flex justify-center gap-6 md:contents">
+            <a href="#listen" class="hover:text-white transition-colors">LISTEN</a>
+            <a href="#pictures" class="hover:text-white transition-colors">PICTURES</a>
+            <a href="#contact" class="hover:text-white transition-colors">CONTACT</a>
+          </div>
         </nav>
       </div>
     </header>
