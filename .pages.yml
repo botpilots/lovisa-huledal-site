@@ -168,9 +168,11 @@ content:
                 - Sacral
 
           - name: composer
+            label: Composer
             type: string
 
           - name: piece
+            label: Piece
             type: string
 
           - name: role
@@ -188,6 +190,7 @@ content:
       primary: title
     fields:
       - name: title
+        label: Title
         type: string
 
       - name: headerColor
@@ -196,6 +199,7 @@ content:
         type: color
 
       - name: description
+        label: Description
         type: rich-text
 
       - name: images
@@ -234,9 +238,11 @@ content:
             summary: "{composer} - {piece}"
         fields:
           - name: composer
+            label: Composer
             type: string
 
           - name: piece
+            label: Piece
             type: string
 
   # EVENTS
@@ -259,6 +265,7 @@ content:
         type: string
 
       - name: date
+        label: Date
         type: date
 
       - name: time
@@ -277,9 +284,11 @@ content:
         type: string
 
       - name: description
+        label: Description
         type: rich-text
 
       - name: link
+        label: Link
         type: string
 
       - name: programme
@@ -308,9 +317,11 @@ content:
             type: string
 
           - name: title
+            label: Title
             type: string
 
           - name: description
+            label: Description
             type: text
 
       - name: photos
@@ -330,9 +341,11 @@ content:
                 summary: "{caption}"
             fields:
               - name: image
+                label: Image
                 type: image
 
               - name: caption
+                label: Caption
                 type: string
 
           - name: onStage
@@ -344,9 +357,11 @@ content:
                 summary: "{caption}"
             fields:
               - name: image
+                label: Image
                 type: image
 
               - name: caption
+                label: Caption
                 type: string
 
   # CONTACT
@@ -363,12 +378,15 @@ content:
         type: object
         fields:
           - name: name
+            label: Name
             type: string
 
           - name: email
+            label: Email
             type: string
 
           - name: phone
+            label: Phone
             type: string
 
       - name: lovisa
@@ -376,12 +394,15 @@ content:
         type: object
         fields:
           - name: name
+            label: Name
             type: string
 
           - name: email
+            label: Email
             type: string
 
           - name: phone
+            label: Phone
             type: string
 
       - name: socialMedia
