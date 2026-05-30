@@ -25,6 +25,11 @@ body {
   background-position: center 20%;
 }
 
+/* Top-corner hero title sits below the fixed site header */
+.hero-title--top {
+  top: var(--site-header-height, 7rem);
+}
+
 /* About: mosaic + text side-by-side → image row header + text below (motion via FLIP in JS) */
 .about-text-flow {
   --about-col-gap: 2.5rem;

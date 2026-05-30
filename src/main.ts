@@ -14,10 +14,21 @@ interface MosaicImage {
   alt?: string
 }
 
+type HeroTitlePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+
 interface HomeContent {
+  title?: string
+  titlePosition?: string
   biography: string
   biographyEn: string
   aboutMosaic: MosaicImage[]
+}
+
+const HERO_TITLE_POSITION_CLASS: Record<HeroTitlePosition, string> = {
+  'top-left': 'hero-title--top left-0 text-left',
+  'top-right': 'hero-title--top right-0 text-right',
+  'bottom-left': 'bottom-0 left-0 text-left',
+  'bottom-right': 'bottom-0 right-0 text-right',
 }
 
 interface ProgrammeRepertoireEntry {
@@ -298,6 +309,25 @@ function splitBiography(markdown: string) {
 
 function getMosaicImages(): MosaicImage[] {
   return (content.aboutMosaic ?? []).slice(0, 4)
+}
+
+function parseHeroTitlePosition(raw: string | undefined): HeroTitlePosition {
+  const value = raw?.trim() as HeroTitlePosition | undefined
+  if (value && value in HERO_TITLE_POSITION_CLASS) return value
+  return 'bottom-left'
+}
+
+function renderHeroTitle(): string {
+  const title = content.title?.trim()
+  if (!title) return ''
+
+  const position = parseHeroTitlePosition(content.titlePosition)
+
+  return `
+    <p class="hero-title absolute z-10 p-6 text-xl font-light italic tracking-[0.2em] text-white/95 md:p-10 md:text-2xl ${HERO_TITLE_POSITION_CLASS[position]}">
+      ${escapeHtml(title)}
+    </p>
+  `
 }
 
 function imageObjectPosition(photo: { offsetX?: number; offsetY?: number }): string {
@@ -1425,14 +1455,14 @@ function renderAboutSection(): string {
   const inactiveClass = 'text-gray-400 hover:text-gray-600'
 
   return `
-    <section id="about" class="px-6 py-32">
-      <div class="mx-auto max-w-7xl">
-        <h2 class="select-none mb-12 text-center text-3xl font-light tracking-widest text-gray-900">ABOUT</h2>
-
-        <div class="mb-8 flex justify-end gap-6 text-sm tracking-widest">
+    <section id="about" class="px-6 pt-24 pb-32">
+      <div class="relative mx-auto max-w-7xl">
+        <div class="about-lang absolute right-0 top-0 z-10 flex gap-6 text-sm tracking-widest">
           <button type="button" data-lang="sv" class="cursor-pointer select-none ${language === 'sv' ? activeClass : inactiveClass} transition-colors">SV</button>
           <button type="button" data-lang="en" class="cursor-pointer select-none ${language === 'en' ? activeClass : inactiveClass} transition-colors">EN</button>
         </div>
+
+        <h2 class="select-none mb-12 text-center text-3xl font-light tracking-widest text-gray-900">ABOUT</h2>
 
         <div id="about-bio" class="about-bio" data-expanded="${aboutExpanded}">
           <div class="about-body">
@@ -1698,7 +1728,7 @@ function bindAboutSection(): void {
 
 function renderApp(): void {
   document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-    <header class="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-sm transition-all duration-300 border-b border-white/10">
+    <header data-site-header class="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-sm transition-all duration-300 border-b border-white/10">
       <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center">
         <a href="#" class="text-white text-2xl tracking-[0.2em] font-light hover:text-sand-200 transition-colors">
           LOVISA HULEDAL
@@ -1715,8 +1745,9 @@ function renderApp(): void {
     </header>
 
     <main>
-      <section id="home" class="relative h-screen w-full hero-image flex items-center justify-center">
+      <section id="home" class="relative h-screen w-full hero-image">
         <div class="absolute inset-0 bg-black/20"></div>
+        ${renderHeroTitle()}
       </section>
 
       ${renderAboutSection()}
@@ -1734,7 +1765,27 @@ function renderApp(): void {
   `
 }
 
+function syncSiteHeaderHeight(): void {
+  const header = document.querySelector<HTMLElement>('[data-site-header]')
+  if (!header) return
+  document.documentElement.style.setProperty('--site-header-height', `${header.offsetHeight}px`)
+}
+
+function bindSiteHeader(): void {
+  const header = document.querySelector<HTMLElement>('[data-site-header]')
+  if (!header) return
+
+  const update = () => syncSiteHeaderHeight()
+  update()
+  window.addEventListener('resize', update)
+
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(update).observe(header)
+  }
+}
+
 renderApp()
+bindSiteHeader()
 bindAboutSection()
 bindProgrammeTabs()
 bindProgrammeCarousels()
