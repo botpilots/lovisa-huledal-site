@@ -70,6 +70,36 @@ content:
               min: 0
               max: 100
 
+      - name: siteIcon
+        label: Site icon (favicon)
+        description: Circular icon for browser tabs and bookmarks. Uses the same focus and zoom controls as photos.
+        type: object
+        fields:
+          - name: image
+            label: Image
+            type: image
+
+          - name: offsetX
+            label: Horizontal focus (%) (left = 0, right = 100)
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical focus (%) (higher = lower)
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: zoom
+            label: Zoom (%) (100 = default crop, higher = zoom in)
+            type: number
+            options:
+              min: 100
+              max: 300
+
       - name: biography
         label: Biography (Swedish)
         type: rich-text

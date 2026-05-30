@@ -1,5 +1,6 @@
 import './style.css'
 import { animateAboutLayout } from './about-layout-animation'
+import { syncSiteIcon, type SiteIconSettings } from './site-icon'
 import { marked } from 'marked'
 import home from '../content/home.json'
 import contactData from '../content/contact.json'
@@ -20,6 +21,7 @@ interface HomeContent {
   title?: string
   titlePosition?: string
   heroImage?: MosaicImage
+  siteIcon?: SiteIconSettings
   biography: string
   biographyEn: string
   aboutMosaic: MosaicImage[]
@@ -1831,6 +1833,12 @@ function bindSiteHeader(): void {
 }
 
 syncHeroBackground()
+syncSiteIcon({
+  siteIcon: content.siteIcon,
+  heroImage: content.heroImage?.image,
+  defaultImage: DEFAULT_HERO_IMAGE,
+  resolveAssetUrl: assetUrl,
+})
 renderApp()
 bindSiteHeader()
 bindAboutSection()
