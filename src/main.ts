@@ -407,7 +407,7 @@ function isUpcomingEvent(event: Event): boolean {
   return eventStartsAt(event) >= new Date()
 }
 
-function isPriorEvent(event: Event): boolean {
+function isPastEvent(event: Event): boolean {
   return !isUpcomingEvent(event)
 }
 
@@ -415,9 +415,9 @@ function upcomingEvents(): EventEntry[] {
   return eventEntries.filter((entry) => isUpcomingEvent(entry.event))
 }
 
-function priorEvents(): EventEntry[] {
+function pastEvents(): EventEntry[] {
   return eventEntries
-    .filter((entry) => isPriorEvent(entry.event))
+    .filter((entry) => isPastEvent(entry.event))
     .sort(
       (a, b) =>
         b.event.date.localeCompare(a.event.date) ||
@@ -697,7 +697,7 @@ function renderScheduleEventList(entries: EventEntry[], emptyMessage: string): s
 }
 
 function renderScheduleTabs(active: ScheduleTab): string {
-  const tabs: ScheduleTab[] = ['upcoming', 'prior']
+  const tabs: ScheduleTab[] = ['upcoming', 'past']
   return tabs
     .map(
       (id) => `
@@ -717,8 +717,8 @@ function renderScheduleTabs(active: ScheduleTab): string {
 
 function renderScheduleSection(): string {
   const upcoming = upcomingEvents()
-  const prior = priorEvents()
-  const hasAny = upcoming.length > 0 || prior.length > 0
+  const past = pastEvents()
+  const hasAny = upcoming.length > 0 || past.length > 0
   const active: ScheduleTab = 'upcoming'
 
   if (!hasAny) {
@@ -749,8 +749,8 @@ function renderScheduleSection(): string {
           <div data-calendar-panel="upcoming" class="calendar-panel">
             ${renderScheduleEventList(upcoming, 'No upcoming performances.')}
           </div>
-          <div data-calendar-panel="prior" class="calendar-panel" hidden>
-            ${renderScheduleEventList(prior, 'No prior performances.')}
+          <div data-calendar-panel="past" class="calendar-panel" hidden>
+            ${renderScheduleEventList(past, 'No past performances.')}
           </div>
         </div>
       </div>
@@ -831,11 +831,11 @@ function programmeTabButtonClass(tab: ProgrammeTab, active: ProgrammeTab): strin
   return tabButtonClass(tab === active)
 }
 
-type ScheduleTab = 'upcoming' | 'prior'
+type ScheduleTab = 'upcoming' | 'past'
 
 const SCHEDULE_TAB_LABELS: Record<ScheduleTab, string> = {
   upcoming: 'UPCOMING',
-  prior: 'PRIOR',
+  past: 'PAST',
 }
 
 function calendarTabButtonClass(tab: ScheduleTab, active: ScheduleTab): string {
