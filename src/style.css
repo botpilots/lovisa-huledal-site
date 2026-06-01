@@ -14,8 +14,92 @@
 }
 
 html {
-  /* Anchor / scrollIntoView: section tops sit flush below the fixed site header */
+  /* Anchor / scrollIntoView: section tops sit flush below the stuck site header */
   scroll-padding-top: var(--site-header-height, 7rem);
+}
+
+/* Hero footer nav → fixed site header once scrolled past (same look in both states) */
+.site-header {
+  --site-header-bg: rgb(0 0 0 / 0.4);
+  --site-header-pad-y: 1rem;
+  --site-header-pad-x: 1.5rem;
+  --site-header-nav-max: 44rem;
+
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  background-color: var(--site-header-bg);
+  backdrop-filter: blur(4px);
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.site-header--stuck {
+  position: fixed;
+  top: 0;
+  bottom: auto;
+  border-top: none;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.site-header__inner {
+  display: flex;
+  justify-content: center;
+  padding: var(--site-header-pad-y) var(--site-header-pad-x);
+}
+
+@media (min-width: 48rem) {
+  .site-header {
+    --site-header-pad-y: 1.25rem;
+  }
+}
+
+.site-header .site-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: var(--site-header-nav-max);
+  margin-inline: auto;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+  color: rgb(229 231 235);
+}
+
+@media (min-width: 40rem) {
+  .site-header .site-nav {
+    font-size: 0.875rem;
+  }
+}
+
+.site-header .site-nav-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem 2rem;
+}
+
+@media (min-width: 48rem) {
+  .site-header .site-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem 2rem;
+  }
+
+  .site-header .site-nav-row {
+    display: contents;
+  }
+}
+
+.site-header .site-nav-link {
+  transition: color 0.2s ease;
+}
+
+.site-header .site-nav-link:hover {
+  color: white;
 }
 
 body {
@@ -30,9 +114,9 @@ body {
   background-position: var(--hero-background-position, 50% 20%);
 }
 
-/* Top-corner hero title sits below the fixed site header */
+/* Top-corner hero title clears the stuck site header only */
 .hero-title--top {
-  top: var(--site-header-height, 7rem);
+  top: var(--site-header-height, 0px);
 }
 
 /* About: mosaic + text side-by-side → image row header + text below (motion via FLIP in JS) */

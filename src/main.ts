@@ -1771,29 +1771,25 @@ function bindAboutSection(): void {
 
 function renderApp(): void {
   document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-    <header data-site-header class="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-sm transition-all duration-300 border-b border-white/10">
-      <div class="mx-auto flex max-w-7xl flex-col items-center px-6 py-4 md:flex-row md:justify-between md:py-6">
-        <a href="#" class="text-center text-xl tracking-[0.2em] font-light text-white transition-colors hover:text-sand-200 sm:text-2xl">
-          LOVISA HULEDAL
-        </a>
-        <nav class="site-nav mt-3 flex w-full flex-col items-center gap-3 text-xs tracking-wide text-gray-200 sm:text-sm md:mt-0 md:w-auto md:flex-row md:justify-end md:gap-8 md:tracking-widest">
-          <div class="site-nav-row flex justify-center gap-6 md:contents">
-            <a href="#about" class="hover:text-white transition-colors">ABOUT</a>
-            <a href="#programmes" class="hover:text-white transition-colors">PROGRAMMES</a>
-            <a href="#calendar" class="hover:text-white transition-colors">CALENDAR</a>
-          </div>
-          <div class="site-nav-row flex justify-center gap-6 md:contents">
-            <a href="#listen" class="hover:text-white transition-colors">LISTEN</a>
-            <a href="#pictures" class="hover:text-white transition-colors">PICTURES</a>
-            <a href="#contact" class="hover:text-white transition-colors">CONTACT</a>
-          </div>
-        </nav>
-      </div>
-    </header>
-
     <main>
       <section id="home" class="relative h-screen w-full hero-image md:mb-5">
         ${renderHeroTitle()}
+        <footer data-site-header class="site-header" aria-label="Site navigation">
+          <div class="site-header__inner">
+            <nav class="site-nav">
+              <div class="site-nav-row">
+                <a href="#about" class="site-nav-link">ABOUT</a>
+                <a href="#programmes" class="site-nav-link">PROGRAMMES</a>
+                <a href="#calendar" class="site-nav-link">CALENDAR</a>
+              </div>
+              <div class="site-nav-row">
+                <a href="#listen" class="site-nav-link">LISTEN</a>
+                <a href="#pictures" class="site-nav-link">PICTURES</a>
+                <a href="#contact" class="site-nav-link">CONTACT</a>
+              </div>
+            </nav>
+          </div>
+        </footer>
       </section>
 
       ${renderAboutSection()}
@@ -1814,19 +1810,44 @@ function renderApp(): void {
 function syncSiteHeaderHeight(): void {
   const header = document.querySelector<HTMLElement>('[data-site-header]')
   if (!header) return
-  document.documentElement.style.setProperty('--site-header-height', `${header.offsetHeight}px`)
+  const stuck = header.classList.contains('site-header--stuck')
+  const height = stuck ? header.offsetHeight : 0
+  document.documentElement.style.setProperty('--site-header-height', `${height}px`)
 }
 
 function bindSiteHeader(): void {
   const header = document.querySelector<HTMLElement>('[data-site-header]')
-  if (!header) return
+  const hero = document.getElementById('home')
+  if (!header || !hero) return
 
-  const update = () => syncSiteHeaderHeight()
-  update()
-  window.addEventListener('resize', update)
+  const footerStickScrollY = () =>
+    hero.offsetTop + hero.offsetHeight - header.offsetHeight
+
+  const syncStuck = () => {
+    const stuck = window.scrollY >= footerStickScrollY()
+    header.classList.toggle('site-header--stuck', stuck)
+    header.toggleAttribute('data-stuck', stuck)
+    syncSiteHeaderHeight()
+  }
+
+  let scrollScheduled = false
+  const onScroll = () => {
+    if (scrollScheduled) return
+    scrollScheduled = true
+    requestAnimationFrame(() => {
+      syncStuck()
+      scrollScheduled = false
+    })
+  }
+
+  const onResize = () => syncStuck()
+
+  syncStuck()
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onResize)
 
   if (typeof ResizeObserver !== 'undefined') {
-    new ResizeObserver(update).observe(header)
+    new ResizeObserver(onResize).observe(header)
   }
 }
 
