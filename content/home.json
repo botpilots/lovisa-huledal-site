@@ -2,9 +2,9 @@
   "title": "mezzo-soprano",
   "titlePosition": "bottom-right",
   "heroImage": {
-    "image": "/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg",
+    "image": "/media/lovisa-startbild.avif",
     "offsetX": 50,
-    "offsetY": 20
+    "offsetY": 50
   },
   "siteIcon": {
     "image": "/media/jolo-mb-4437.jpeg",

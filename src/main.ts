@@ -166,8 +166,8 @@ function videoIdFromGlob(filePath: string): string {
   return eventIdFromGlob(filePath)
 }
 
-function scheduleEventDomId(eventId: string): string {
-  return `schedule-event-${eventId}`
+function calendarEventDomId(eventId: string): string {
+  return `calendar-event-${eventId}`
 }
 
 const programmeModules = import.meta.glob<Programme>('../content/programmes/*.json', {
@@ -434,7 +434,7 @@ function programmeTitleForPath(programmePath: string): string | undefined {
 }
 
 /** Name, or programme title; with programme in parentheses when both are set. */
-function scheduleEventDisplayTitle(event: Event): string {
+function calendarEventDisplayTitle(event: Event): string {
   const name = event.name?.trim()
   const programmeTitle = event.programme ? programmeTitleForPath(event.programme) : undefined
 
@@ -637,7 +637,7 @@ function renderEventTicketsLink(event: Event): string {
       class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sand-400/90 bg-sand-100/90 px-3 py-1 text-xs tracking-widest text-sand-800 transition-colors hover:border-sand-600 hover:bg-sand-200 hover:text-gray-900"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Tickets for ${scheduleEventDisplayTitle(event)} (opens in new tab)"
+      aria-label="Tickets for ${calendarEventDisplayTitle(event)} (opens in new tab)"
     >
       TICKETS
       ${renderExternalLinkIcon(14)}
@@ -646,7 +646,7 @@ function renderEventTicketsLink(event: Event): string {
 }
 
 function renderScheduleEventDetails(event: Event): string {
-  const title = `<span class="text-gray-900">${scheduleEventDisplayTitle(event)}</span>`
+  const title = `<span class="text-gray-900">${calendarEventDisplayTitle(event)}</span>`
   const locationText = event.location?.trim()
 
   const locationRow = locationText
@@ -668,13 +668,13 @@ function renderScheduleEventRow(entry: EventEntry): string {
 
   return `
     <li
-      id="${scheduleEventDomId(id)}"
-      data-schedule-event
+      id="${calendarEventDomId(id)}"
+      data-calendar-event
       data-event-id="${id}"
       data-programme-path="${programmePath}"
-      class="schedule-event rounded-sm py-4 md:py-5"
+      class="calendar-event rounded-sm py-4 md:py-5"
     >
-      <div class="schedule-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 text-lg font-light leading-relaxed md:gap-x-10">
+      <div class="calendar-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 text-lg font-light leading-relaxed md:gap-x-10">
         <div class="flex flex-col items-end gap-y-2">
           <time datetime="${event.date}" class="text-right tracking-wide text-sand-800">${formatEventWhen(event)}</time>
           ${tickets ? `<span class="flex justify-end">${tickets}</span>` : ''}
@@ -693,7 +693,7 @@ function renderScheduleEventList(entries: EventEntry[], emptyMessage: string): s
     return `<p class="py-8 text-center text-base font-light text-gray-500">${emptyMessage}</p>`
   }
 
-  return `<ul class="schedule-list divide-y divide-sand-200/80">${entries.map((entry) => renderScheduleEventRow(entry)).join('')}</ul>`
+  return `<ul class="calendar-list divide-y divide-sand-200/80">${entries.map((entry) => renderScheduleEventRow(entry)).join('')}</ul>`
 }
 
 function renderScheduleTabs(active: ScheduleTab): string {
@@ -703,8 +703,8 @@ function renderScheduleTabs(active: ScheduleTab): string {
       (id) => `
         <button
           type="button"
-          data-schedule-tab="${id}"
-          class="${scheduleTabButtonClass(id, active)}"
+          data-calendar-tab="${id}"
+          class="${calendarTabButtonClass(id, active)}"
           role="tab"
           aria-selected="${id === active}"
         >
@@ -723,9 +723,9 @@ function renderScheduleSection(): string {
 
   if (!hasAny) {
     return `
-      <section id="schedule" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
+      <section id="calendar" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
         <div class="mx-auto max-w-4xl text-center">
-          <h2 class="${SECTION_TITLE_MARGIN} ${SECTION_TITLE_BASE}">SCHEDULE</h2>
+          <h2 class="${SECTION_TITLE_MARGIN} ${SECTION_TITLE_BASE}">CALENDAR</h2>
           <p class="text-lg font-light leading-relaxed text-gray-600">
             No performances listed at the moment.
           </p>
@@ -735,10 +735,10 @@ function renderScheduleSection(): string {
   }
 
   return `
-    <section id="schedule" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
+    <section id="calendar" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-5xl">
-        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">SCHEDULE</h2>
-        <div data-schedule-root data-active-tab="${active}">
+        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">CALENDAR</h2>
+        <div data-calendar-root data-active-tab="${active}">
           <div
             class="${PROGRAMME_TABS_CLASS} mx-auto max-w-md"
             role="tablist"
@@ -746,10 +746,10 @@ function renderScheduleSection(): string {
           >
             ${renderScheduleTabs(active)}
           </div>
-          <div data-schedule-panel="upcoming" class="schedule-panel">
+          <div data-calendar-panel="upcoming" class="calendar-panel">
             ${renderScheduleEventList(upcoming, 'No upcoming performances.')}
           </div>
-          <div data-schedule-panel="prior" class="schedule-panel" hidden>
+          <div data-calendar-panel="prior" class="calendar-panel" hidden>
             ${renderScheduleEventList(prior, 'No prior performances.')}
           </div>
         </div>
@@ -778,8 +778,8 @@ const label = count === 1 ? '1 upcoming event!' : `${count} upcoming events!`
 
   return `
     <a
-      href="#schedule"
-      data-programme-schedule-link
+      href="#calendar"
+      data-programme-calendar-link
       data-programme-path="${programmePath}"
       class="absolute z-10 max-w-xs cursor-pointer text-xs italic tracking-wide text-white/95 transition-colors hover:underline hover:text-white ${positionClass}"
  
@@ -838,7 +838,7 @@ const SCHEDULE_TAB_LABELS: Record<ScheduleTab, string> = {
   prior: 'PRIOR',
 }
 
-function scheduleTabButtonClass(tab: ScheduleTab, active: ScheduleTab): string {
+function calendarTabButtonClass(tab: ScheduleTab, active: ScheduleTab): string {
   return tabButtonClass(tab === active)
 }
 
@@ -1615,17 +1615,17 @@ function bindProgrammeTabs(): void {
 }
 
 function clearScheduleHighlights(): void {
-  document.querySelectorAll('.schedule-event--highlight').forEach((el) => {
-    el.classList.remove('schedule-event--highlight')
+  document.querySelectorAll('.calendar-event--highlight').forEach((el) => {
+    el.classList.remove('calendar-event--highlight')
   })
 }
 
 function highlightScheduleEventsForProgramme(programmePath: string): void {
   clearScheduleHighlights()
   const rows = document.querySelectorAll<HTMLElement>(
-    `[data-schedule-event][data-programme-path="${programmePath}"]`,
+    `[data-calendar-event][data-programme-path="${programmePath}"]`,
   )
-  rows.forEach((row) => row.classList.add('schedule-event--highlight'))
+  rows.forEach((row) => row.classList.add('calendar-event--highlight'))
   if (rows.length) {
     window.setTimeout(clearScheduleHighlights, SCHEDULE_HIGHLIGHT_MS)
   }
@@ -1649,35 +1649,35 @@ function scrollBelowSiteHeader(element: HTMLElement, smooth: boolean): void {
 function applyScheduleTab(root: HTMLElement, tab: ScheduleTab): void {
   root.dataset.activeTab = tab
 
-  root.querySelectorAll<HTMLButtonElement>('[data-schedule-tab]').forEach((button) => {
-    const id = button.dataset.scheduleTab as ScheduleTab | undefined
+  root.querySelectorAll<HTMLButtonElement>('[data-calendar-tab]').forEach((button) => {
+    const id = button.dataset.calendarTab as ScheduleTab | undefined
     if (!id) return
-    button.className = scheduleTabButtonClass(id, tab)
+    button.className = calendarTabButtonClass(id, tab)
     button.setAttribute('aria-selected', String(id === tab))
   })
 
-  root.querySelectorAll<HTMLElement>('[data-schedule-panel]').forEach((panel) => {
-    const id = panel.dataset.schedulePanel as ScheduleTab | undefined
+  root.querySelectorAll<HTMLElement>('[data-calendar-panel]').forEach((panel) => {
+    const id = panel.dataset.calendarPanel as ScheduleTab | undefined
     if (id === tab) panel.removeAttribute('hidden')
     else panel.setAttribute('hidden', '')
   })
 }
 
 function showScheduleTabForEvent(eventId: string): void {
-  const row = document.getElementById(scheduleEventDomId(eventId))
-  const root = document.querySelector<HTMLElement>('[data-schedule-root]')
+  const row = document.getElementById(calendarEventDomId(eventId))
+  const root = document.querySelector<HTMLElement>('[data-calendar-root]')
   if (!row || !root) return
 
-  const panel = row.closest<HTMLElement>('[data-schedule-panel]')
-  const tab = panel?.dataset.schedulePanel as ScheduleTab | undefined
+  const panel = row.closest<HTMLElement>('[data-calendar-panel]')
+  const tab = panel?.dataset.calendarPanel as ScheduleTab | undefined
   if (tab) applyScheduleTab(root, tab)
 }
 
 function navigateToProgrammeSchedule(programmePath: string): void {
-  const schedule = document.getElementById('schedule')
-  if (!schedule) return
+  const calendar = document.getElementById('calendar')
+  if (!calendar) return
 
-  const root = document.querySelector<HTMLElement>('[data-schedule-root]')
+  const root = document.querySelector<HTMLElement>('[data-calendar-root]')
   if (root) applyScheduleTab(root, 'upcoming')
 
   const programmeEvents = eventsForProgramme(programmePath)
@@ -1685,8 +1685,8 @@ function navigateToProgrammeSchedule(programmePath: string): void {
   const smooth = !reducedMotion
 
   const firstId = programmeEvents[0]?.id
-  const firstRow = firstId ? document.getElementById(scheduleEventDomId(firstId)) : null
-  const target = firstRow ?? schedule
+  const firstRow = firstId ? document.getElementById(calendarEventDomId(firstId)) : null
+  const target = firstRow ?? calendar
 
   scrollBelowSiteHeader(target, smooth)
 
@@ -1695,10 +1695,10 @@ function navigateToProgrammeSchedule(programmePath: string): void {
 }
 
 function bindScheduleTabs(): void {
-  document.querySelectorAll<HTMLElement>('[data-schedule-root]').forEach((root) => {
-    root.querySelectorAll<HTMLButtonElement>('[data-schedule-tab]').forEach((button) => {
+  document.querySelectorAll<HTMLElement>('[data-calendar-root]').forEach((root) => {
+    root.querySelectorAll<HTMLButtonElement>('[data-calendar-tab]').forEach((button) => {
       button.addEventListener('click', () => {
-        const tab = button.dataset.scheduleTab as ScheduleTab | undefined
+        const tab = button.dataset.calendarTab as ScheduleTab | undefined
         if (!tab || root.dataset.activeTab === tab) return
         applyScheduleTab(root, tab)
       })
@@ -1707,7 +1707,7 @@ function bindScheduleTabs(): void {
 }
 
 function bindScheduleNavigation(): void {
-  document.querySelectorAll<HTMLAnchorElement>('[data-programme-schedule-link]').forEach((link) => {
+  document.querySelectorAll<HTMLAnchorElement>('[data-programme-calendar-link]').forEach((link) => {
     link.addEventListener('click', (event) => {
       event.preventDefault()
       const programmePath = link.dataset.programmePath
@@ -1717,12 +1717,12 @@ function bindScheduleNavigation(): void {
   })
 
   const hash = window.location.hash.slice(1)
-  if (!hash.startsWith('schedule')) return
+  if (!hash.startsWith('calendar')) return
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  if (hash === 'schedule') {
-    const section = document.getElementById('schedule')
+  if (hash === 'calendar') {
+    const section = document.getElementById('calendar')
     if (section) scrollBelowSiteHeader(section, !reducedMotion)
     return
   }
@@ -1780,7 +1780,7 @@ function renderApp(): void {
           <div class="site-nav-row flex justify-center gap-6 md:contents">
             <a href="#about" class="hover:text-white transition-colors">ABOUT</a>
             <a href="#programmes" class="hover:text-white transition-colors">PROGRAMMES</a>
-            <a href="#schedule" class="hover:text-white transition-colors">SCHEDULE</a>
+            <a href="#calendar" class="hover:text-white transition-colors">CALENDAR</a>
           </div>
           <div class="site-nav-row flex justify-center gap-6 md:contents">
             <a href="#listen" class="hover:text-white transition-colors">LISTEN</a>
@@ -1793,7 +1793,6 @@ function renderApp(): void {
 
     <main>
       <section id="home" class="relative h-screen w-full hero-image md:mb-5">
-        <div class="absolute inset-0 bg-black/20"></div>
         ${renderHeroTitle()}
       </section>
 

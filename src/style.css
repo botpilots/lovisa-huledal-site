@@ -290,7 +290,7 @@ body {
   padding-block: 0.5rem;
 }
 
-@keyframes schedule-event-pulse {
+@keyframes calendar-event-pulse {
   0%,
   100% {
     background-color: transparent;
@@ -301,12 +301,12 @@ body {
   }
 }
 
-.schedule-event--highlight {
-  animation: schedule-event-pulse 1s ease-in-out 2;
+.calendar-event--highlight {
+  animation: calendar-event-pulse 1s ease-in-out 2;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .schedule-event--highlight {
+  .calendar-event--highlight {
     animation: none;
     background-color: var(--color-sand-200);
   }
