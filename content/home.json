@@ -1,6 +1,18 @@
 {
-  "title": "mezzo-soprano",
-  "titlePosition": "bottom-right",
+  "heroTitle": {
+    "text": "LOVISA HULEDAL",
+    "offsetX": 20,
+    "offsetY": 20,
+    "offsetXMobile": 44,
+    "offsetYMobile": 6
+  },
+  "heroSubtitle": {
+    "text": "Mezzo-soprano",
+    "offsetX": 28,
+    "offsetY": 25,
+    "offsetXMobile": 54,
+    "offsetYMobile": 9
+  },
   "heroImage": {
     "image": "/media/lovisa-startbild.avif",
     "offsetX": 50,

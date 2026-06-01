@@ -30,26 +30,91 @@ content:
     operations:
       delete: false
     fields:
-      - name: title
+      - name: heroTitle
         label: Hero title
-        description: Shown on the landing image in italics (e.g. mezzo-soprano).
-        type: string
+        description: Main name on the landing image (default top left). Offsets (%) position the center of the text in the hero.
+        type: object
+        fields:
+          - name: text
+            label: Text
+            type: string
 
-      - name: titlePosition
-        label: Hero title position
-        description: Corner of the landing image where the title appears (with padding from the edge).
-        type: select
-        default: bottom-left
-        options:
-          values:
-            - top-left
-            - top-right
-            - bottom-left
-            - bottom-right
+          - name: offsetX
+            label: Horizontal position — desktop (%)
+            description: Text center on viewports 768px and wider (0 = left, 100 = right).
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical position — desktop (%)
+            description: Text center on viewports 768px and wider (0 = top, 100 = bottom).
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetXMobile
+            label: Horizontal position — mobile (%)
+            description: Text center below 768px width only. Leave empty to use the desktop value.
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetYMobile
+            label: Vertical position — mobile (%)
+            description: Text center below 768px width only. Leave empty to use the desktop value.
+            type: number
+            options:
+              min: 0
+              max: 100
+
+      - name: heroSubtitle
+        label: Hero subtitle
+        description: Subtitle on the landing image (default top right). Offsets (%) position the center of the text in the hero.
+        type: object
+        fields:
+          - name: text
+            label: Text
+            type: string
+
+          - name: offsetX
+            label: Horizontal position — desktop (%)
+            description: Text center on viewports 768px and wider (0 = left, 100 = right).
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical position — desktop (%)
+            description: Text center on viewports 768px and wider (0 = top, 100 = bottom).
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetXMobile
+            label: Horizontal position — mobile (%)
+            description: Text center below 768px width only. Leave empty to use the desktop value.
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetYMobile
+            label: Vertical position — mobile (%)
+            description: Text center below 768px width only. Leave empty to use the desktop value.
+            type: number
+            options:
+              min: 0
+              max: 100
 
       - name: heroImage
         label: Front page image
-        description: Full-screen landing photo behind the hero title.
+        description: Full-screen landing photo behind the hero title and subtitle.
         type: object
         fields:
           - name: image

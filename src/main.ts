@@ -15,23 +15,22 @@ interface MosaicImage {
   alt?: string
 }
 
-type HeroTitlePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+interface HeroTextBlock {
+  text?: string
+  offsetX?: number
+  offsetY?: number
+  offsetXMobile?: number
+  offsetYMobile?: number
+}
 
 interface HomeContent {
-  title?: string
-  titlePosition?: string
+  heroTitle?: HeroTextBlock
+  heroSubtitle?: HeroTextBlock
   heroImage?: MosaicImage
   siteIcon?: SiteIconSettings
   biography: string
   biographyEn: string
   aboutMosaic: MosaicImage[]
-}
-
-const HERO_TITLE_POSITION_CLASS: Record<HeroTitlePosition, string> = {
-  'top-left': 'hero-title--top left-0 text-left',
-  'top-right': 'hero-title--top right-0 text-right',
-  'bottom-left': 'bottom-0 left-0 text-left',
-  'bottom-right': 'bottom-0 right-0 text-right',
 }
 
 interface ProgrammeRepertoireEntry {
@@ -346,23 +345,65 @@ function getMosaicImages(): MosaicImage[] {
   return (content.aboutMosaic ?? []).slice(0, 4)
 }
 
-function parseHeroTitlePosition(raw: string | undefined): HeroTitlePosition {
-  const value = raw?.trim() as HeroTitlePosition | undefined
-  if (value && value in HERO_TITLE_POSITION_CLASS) return value
-  return 'bottom-left'
+function clampHeroOffset(value: number | undefined, fallback: number): number {
+  const n = value ?? fallback
+  return Math.min(100, Math.max(0, n))
 }
 
-function renderHeroTitle(): string {
-  const title = content.title?.trim()
-  if (!title) return ''
+type HeroTextDefaults = {
+  offsetX: number
+  offsetY: number
+  offsetXMobile?: number
+  offsetYMobile?: number
+}
 
-  const position = parseHeroTitlePosition(content.titlePosition)
+function heroTextPositionStyle(
+  block: HeroTextBlock | undefined,
+  defaults: HeroTextDefaults,
+): string {
+  const xDesktop = clampHeroOffset(block?.offsetX, defaults.offsetX)
+  const yDesktop = clampHeroOffset(block?.offsetY, defaults.offsetY)
+  const xMobile = clampHeroOffset(
+    block?.offsetXMobile ?? block?.offsetX,
+    defaults.offsetXMobile ?? defaults.offsetX,
+  )
+  const yMobile = clampHeroOffset(
+    block?.offsetYMobile ?? block?.offsetY,
+    defaults.offsetYMobile ?? defaults.offsetY,
+  )
+  return `--hero-offset-x:${xMobile};--hero-offset-y:${yMobile};--hero-offset-x-desktop:${xDesktop};--hero-offset-y-desktop:${yDesktop}`
+}
+
+function renderHeroHeading(
+  block: HeroTextBlock | undefined,
+  defaults: HeroTextDefaults,
+  className: string,
+): string {
+  const text = block?.text?.trim()
+  if (!text) return ''
 
   return `
-    <p class="hero-title absolute z-10 p-6 text-xl font-light italic tracking-[0.2em] text-white/95 md:p-10 md:text-2xl ${HERO_TITLE_POSITION_CLASS[position]}">
-      ${escapeHtml(title)}
+    <p class="hero-heading ${className}" style="${heroTextPositionStyle(block, defaults)}">
+      ${escapeHtml(text)}
     </p>
   `
+}
+
+function renderHeroHeadings(): string {
+  return [
+    renderHeroHeading(
+      content.heroTitle,
+      { offsetX: 6, offsetY: 10, offsetXMobile: 50, offsetYMobile: 12 },
+      'hero-heading--title',
+    ),
+    renderHeroHeading(
+      content.heroSubtitle,
+      { offsetX: 94, offsetY: 10, offsetXMobile: 50, offsetYMobile: 22 },
+      'hero-heading--subtitle',
+    ),
+  ]
+    .filter(Boolean)
+    .join('')
 }
 
 function imageObjectPosition(photo: { offsetX?: number; offsetY?: number }): string {
@@ -1773,7 +1814,7 @@ function renderApp(): void {
   document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <main>
       <section id="home" class="relative h-screen w-full hero-image md:mb-5">
-        ${renderHeroTitle()}
+        ${renderHeroHeadings()}
         <footer data-site-header class="site-header" aria-label="Site navigation">
           <div class="site-header__inner">
             <nav class="site-nav">

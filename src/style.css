@@ -114,9 +114,53 @@ body {
   background-position: var(--hero-background-position, 50% 20%);
 }
 
-/* Top-corner hero title clears the stuck site header only */
-.hero-title--top {
-  top: var(--site-header-height, 0px);
+/* Offsets (%) place the center of the text; mobile vars below 48rem, desktop at md+ */
+.hero-heading {
+  position: absolute;
+  left: calc(var(--hero-offset-x) * 1%);
+  top: calc(var(--hero-offset-y) * 1%);
+  z-index: 10;
+  margin: 0;
+  max-width: min(42rem, calc(100% - 3rem));
+  color: rgb(255 255 255 / 0.95);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (min-width: 48rem) {
+  .hero-heading {
+    left: calc(var(--hero-offset-x-desktop) * 1%);
+    top: calc(var(--hero-offset-y-desktop) * 1%);
+  }
+}
+
+.hero-heading--title {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+}
+
+@media (min-width: 48rem) {
+  .hero-heading--title {
+    font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  }
+}
+
+.hero-heading--subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+}
+
+@media (min-width: 48rem) {
+  .hero-heading--subtitle {
+    font-size: clamp(1.125rem, 1.8vw, 1.5rem);
+  }
 }
 
 /* About: mosaic + text side-by-side → image row header + text below (motion via FLIP in JS) */
