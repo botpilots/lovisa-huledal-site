@@ -202,7 +202,7 @@ const videoEntries: VideoEntry[] = Object.entries(videoModules)
 const PHOTO_CATEGORIES: PhotoCategory[] = ['portraits', 'onStage']
 
 const PHOTO_CATEGORY_LABELS: Record<PhotoCategory, string> = {
-  portraits: 'PORTRAITS',
+  portraits: 'PORTRAIT',
   onStage: 'ON STAGE',
 }
 
@@ -250,7 +250,10 @@ const SECTION_TITLE_BASE = 'select-none text-3xl font-light tracking-widest text
 const ABOUT_SECTION_PADDING = 'pt-12 pb-16 md:pt-[3.825rem] md:pb-[5.25rem]'
 const ABOUT_SECTION_TITLE_MARGIN = 'mb-12 md:mb-[4.675rem]'
 const SECTION_CONTENT_STACK = 'space-y-12 md:space-y-[4.25rem]'
-const PICTURES_CONTENT_STACK = 'space-y-20 md:space-y-[6.25rem]'
+const PICTURES_TAB_BASE =
+  'cursor-pointer select-none border-0 bg-transparent p-0 text-sm tracking-[0.25em] transition-colors'
+const PICTURES_TAB_ACTIVE = 'text-sand-800'
+const PICTURES_TAB_INACTIVE = 'text-gray-400 hover:text-gray-600'
 const PROGRAMME_TABS_CLASS =
   'programme-tabs mb-4 grid w-full shrink-0 py-2 lg:mb-8 lg:py-4'
 
@@ -1120,6 +1123,42 @@ function renderListenThumbnail(entry: VideoEntry): string {
   `
 }
 
+function renderMediaStripChevron(direction: 'prev' | 'next'): string {
+  const isPrev = direction === 'prev'
+  const control = isPrev ? 'data-media-strip-prev' : 'data-media-strip-next'
+  const label = isPrev ? 'Scroll left' : 'Scroll right'
+  const path = isPrev ? 'M14 6 L8 12 L14 18' : 'M10 6 L16 12 L10 18'
+
+  return `
+    <button
+      type="button"
+      ${control}
+      aria-label="${label}"
+      class="media-strip__nav media-strip__nav--${direction}"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="${path}" />
+      </svg>
+    </button>
+  `
+}
+
+function renderMediaStrip(itemsMarkup: string, rows: 1 | 2 = 2): string {
+  const rowClass = rows === 1 ? 'media-strip--1-row' : 'media-strip--2-rows'
+
+  return `
+    <div class="media-strip ${rowClass}" data-media-strip>
+      <div class="media-strip__viewport" data-media-strip-viewport tabindex="0">
+        <div class="media-strip__grid">
+          ${itemsMarkup}
+        </div>
+      </div>
+      ${renderMediaStripChevron('prev')}
+      ${renderMediaStripChevron('next')}
+    </div>
+  `
+}
+
 function renderListenGallery(): string {
   const items = videoEntries.map((entry) => renderListenThumbnail(entry)).filter(Boolean)
 
@@ -1131,7 +1170,7 @@ function renderListenGallery(): string {
     `
   }
 
-  return `<div class="listen-gallery">${items.join('')}</div>`
+  return renderMediaStrip(items.join(''), 1)
 }
 
 function renderListenDetailShell(): string {
@@ -1242,7 +1281,7 @@ function renderPictureThumbnail(entry: PhotoEntry): string {
   const caption = photo.caption
 
   const captionMarkup = caption
-    ? `<p class="mt-4 text-sm font-light tracking-wide text-gray-500">${escapeHtml(caption)}</p>`
+    ? `<p class="mt-2 text-xs font-light leading-snug tracking-wide text-gray-500">${escapeHtml(caption)}</p>`
     : ''
 
   return `
@@ -1251,11 +1290,11 @@ function renderPictureThumbnail(entry: PhotoEntry): string {
       data-pictures-photo="${id}"
       class="pictures-thumb group flex min-w-0 cursor-pointer flex-col text-left"
     >
-      <span class="block overflow-hidden bg-sand-200">
+      <span class="pictures-thumb-media block overflow-hidden bg-sand-200">
         <img
           src="${assetUrl(photo.image)}"
           alt="${caption ? escapeHtml(caption) : ''}"
-          class="pictures-thumb-image w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+          class="pictures-thumb-image h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
           loading="lazy"
         />
       </span>
@@ -1264,24 +1303,53 @@ function renderPictureThumbnail(entry: PhotoEntry): string {
   `
 }
 
-function renderPicturesCategory(category: PhotoCategory): string {
-  const items = photoEntries.filter((entry) => entry.category === category)
-  if (!items.length) return ''
+function picturesTabButtonClass(category: PhotoCategory, active: PhotoCategory): string {
+  const isActive = category === active
+  return `${PICTURES_TAB_BASE} ${isActive ? PICTURES_TAB_ACTIVE : PICTURES_TAB_INACTIVE}`
+}
+
+function renderPicturesTabs(active: PhotoCategory): string {
+  const tabs = PHOTO_CATEGORIES.map(
+    (id) => `
+      <button
+        type="button"
+        data-pictures-tab="${id}"
+        class="${picturesTabButtonClass(id, active)}"
+        role="tab"
+        aria-selected="${id === active}"
+      >
+        ${PHOTO_CATEGORY_LABELS[id]}
+      </button>
+    `,
+  ).join('<span class="pictures-tabs__sep" aria-hidden="true">|</span>')
 
   return `
-    <div class="pictures-category">
-      <h3 class="mb-10 text-center text-sm font-normal tracking-[0.25em] text-sand-800">${PHOTO_CATEGORY_LABELS[category]}</h3>
-      <div class="pictures-grid">
-        ${items.map((entry) => renderPictureThumbnail(entry)).join('')}
-      </div>
+    <div class="pictures-tabs" role="tablist">
+      ${tabs}
+    </div>
+  `
+}
+
+function renderPicturesPanel(category: PhotoCategory, active: PhotoCategory): string {
+  const items = photoEntries.filter((entry) => entry.category === category)
+  const content = items.length
+    ? renderMediaStrip(items.map((entry) => renderPictureThumbnail(entry)).join(''))
+    : `<p class="py-8 text-center text-base font-light text-gray-500">No photos in this category.</p>`
+
+  return `
+    <div
+      data-pictures-panel="${category}"
+      class="pictures-panel"
+      role="tabpanel"
+      ${category === active ? '' : 'hidden'}
+    >
+      ${content}
     </div>
   `
 }
 
 function renderPicturesGallery(): string {
-  const blocks = PHOTO_CATEGORIES.map((category) => renderPicturesCategory(category)).filter(Boolean)
-
-  if (!blocks.length) {
+  if (!photoEntries.length) {
     return `
       <p class="text-center text-lg font-light leading-relaxed text-gray-600">
         No photos listed at the moment.
@@ -1289,7 +1357,14 @@ function renderPicturesGallery(): string {
     `
   }
 
-  return `<div class="${PICTURES_CONTENT_STACK}">${blocks.join('')}</div>`
+  const active: PhotoCategory = 'portraits'
+
+  return `
+    <div data-pictures-root data-active-tab="${active}">
+      ${renderPicturesTabs(active)}
+      ${PHOTO_CATEGORIES.map((category) => renderPicturesPanel(category, active)).join('')}
+    </div>
+  `
 }
 
 function renderPicturesDetailShell(): string {
@@ -1413,6 +1488,42 @@ function bindListenSection(): void {
   })
 }
 
+function updateMediaStripNav(strip: HTMLElement): void {
+  const viewport = strip.querySelector<HTMLElement>('[data-media-strip-viewport]')
+  const prev = strip.querySelector<HTMLButtonElement>('[data-media-strip-prev]')
+  const next = strip.querySelector<HTMLButtonElement>('[data-media-strip-next]')
+  if (!viewport || !prev || !next) return
+
+  const maxScroll = viewport.scrollWidth - viewport.clientWidth
+  const overflow = maxScroll > 1
+  prev.disabled = viewport.scrollLeft <= 1
+  next.disabled = viewport.scrollLeft >= maxScroll - 1
+  prev.hidden = !overflow
+  next.hidden = !overflow
+}
+
+function applyPicturesTab(root: HTMLElement, tab: PhotoCategory): void {
+  root.dataset.activeTab = tab
+
+  root.querySelectorAll<HTMLButtonElement>('[data-pictures-tab]').forEach((button) => {
+    const id = button.dataset.picturesTab as PhotoCategory | undefined
+    if (!id) return
+    button.className = picturesTabButtonClass(id, tab)
+    button.setAttribute('aria-selected', String(id === tab))
+  })
+
+  root.querySelectorAll<HTMLElement>('[data-pictures-panel]').forEach((panel) => {
+    const id = panel.dataset.picturesPanel as PhotoCategory | undefined
+    if (id === tab) panel.removeAttribute('hidden')
+    else panel.setAttribute('hidden', '')
+  })
+
+  const strip = root.querySelector<HTMLElement>(`[data-pictures-panel="${tab}"] [data-media-strip]`)
+  const viewport = strip?.querySelector<HTMLElement>('[data-media-strip-viewport]')
+  if (viewport) viewport.scrollLeft = 0
+  if (strip) updateMediaStripNav(strip)
+}
+
 function bindPicturesSection(): void {
   document.querySelectorAll<HTMLButtonElement>('[data-pictures-photo]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -1424,6 +1535,41 @@ function bindPicturesSection(): void {
 
   document.querySelector<HTMLButtonElement>('[data-pictures-close]')?.addEventListener('click', () => {
     closePicture()
+  })
+
+  document.querySelectorAll<HTMLElement>('[data-pictures-root]').forEach((root) => {
+    root.querySelectorAll<HTMLButtonElement>('[data-pictures-tab]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const tab = button.dataset.picturesTab as PhotoCategory | undefined
+        if (!tab || root.dataset.activeTab === tab) return
+        applyPicturesTab(root, tab)
+      })
+    })
+  })
+}
+
+function bindMediaStrips(): void {
+  document.querySelectorAll<HTMLElement>('[data-media-strip]').forEach((strip) => {
+    const viewport = strip.querySelector<HTMLElement>('[data-media-strip-viewport]')
+    const prev = strip.querySelector<HTMLButtonElement>('[data-media-strip-prev]')
+    const next = strip.querySelector<HTMLButtonElement>('[data-media-strip-next]')
+    if (!viewport || !prev || !next) return
+
+    const updateNav = (): void => updateMediaStripNav(strip)
+
+    const scrollPage = (direction: -1 | 1): void => {
+      viewport.scrollBy({ left: direction * viewport.clientWidth * 0.9, behavior: 'smooth' })
+    }
+
+    prev.addEventListener('click', () => scrollPage(-1))
+    next.addEventListener('click', () => scrollPage(1))
+    viewport.addEventListener('scroll', updateNav, { passive: true })
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(updateNav).observe(viewport)
+    } else {
+      window.addEventListener('resize', updateNav)
+    }
+    updateNav()
   })
 }
 
@@ -1905,4 +2051,5 @@ bindScheduleTabs()
 bindScheduleNavigation()
 bindListenSection()
 bindPicturesSection()
+bindMediaStrips()
 document.addEventListener('keydown', onMediaOverlayEscape)
