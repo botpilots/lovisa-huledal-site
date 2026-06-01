@@ -133,7 +133,7 @@ interface ContactContent {
 
 const DEFAULT_HERO_IMAGE = '/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg'
 
-const AGENCY_LOGO_SRC = '/media/c50241_ff6d03952d35443998f5dca8861f44e6~mv2.avif'
+const CONTACT_IMAGE_SRC = '/media/jolo-mb-4244.jpeg'
 
 const SOCIAL_ICON_SRC = {
   facebook: '/media/facebook.svg',
@@ -1428,7 +1428,7 @@ function bindPicturesSection(): void {
 }
 
 const CONTACT_LINK_CLASS =
-  'text-sand-800 underline decoration-sand-300 underline-offset-4 transition-colors hover:text-gray-900'
+  'text-gray-800 underline decoration-gray-400/80 underline-offset-4 transition-colors hover:text-gray-950'
 
 function telHref(phone: string): string {
   const normalized = phone.trim().replace(/[^\d+]/g, '')
@@ -1468,7 +1468,7 @@ function renderContactSocialLinks(): string {
 
   if (!links.length) return ''
 
-  return `<div class="mt-10 flex flex-wrap justify-center gap-3 lg:justify-start">${links.join('')}</div>`
+  return `<div class="contact-section__social">${links.join('')}</div>`
 }
 
 function renderContactEmailLink(email: string | undefined): string {
@@ -1492,31 +1492,28 @@ function renderContactSection(): string {
   const agencyLines = [agencyEmail, agencyPhone].filter(Boolean).join('<br />')
 
   return `
-    <section id="contact" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
-      <div class="mx-auto max-w-7xl">
-        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">CONTACT</h2>
-        <div class="contact-layout mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,16rem)_1fr] lg:items-start lg:gap-16">
-          <div class="flex justify-center lg:justify-start">
-            <img
-              src="${assetUrl(AGENCY_LOGO_SRC)}"
-              alt="Eliasson Artists Stockholm"
-              class="contact-agency-logo w-full max-w-[16rem] object-contain"
-              loading="lazy"
-            />
-          </div>
-          <div class="min-w-0 text-center text-lg font-light leading-relaxed text-gray-600 lg:text-left">
-            <p>
-              Lovisa Huledal is represented by
-              <span class="text-gray-900">${escapeHtml(agencyName)}</span>
-              at Eliasson Artists Stockholm:
-            </p>
-            ${agencyLines ? `<p class="mt-4">${agencyLines}</p>` : ''}
-            <p class="mt-8">
-              If you wish to come in contact with Lovisa herself, please use the information below:
-            </p>
-            ${lovisaEmail ? `<p class="mt-4">${lovisaEmail}</p>` : ''}
-            ${renderContactSocialLinks()}
-          </div>
+    <section id="contact" class="contact-section" aria-labelledby="contact-heading">
+      <img
+        src="${assetUrl(CONTACT_IMAGE_SRC)}"
+        alt=""
+        class="contact-section__image"
+        loading="lazy"
+        decoding="async"
+      />
+      <div class="contact-section__panel">
+        <h2 id="contact-heading" class="contact-section__title">CONTACT</h2>
+        <p class="contact-section__intro">Lovisa Huledal is represented by</p>
+        <div class="contact-section__block">
+          <p class="contact-section__label">ELIASSON ARTISTS STOCKHOLM</p>
+          <p class="contact-section__person">${escapeHtml(agencyName)}</p>
+          ${agencyLines ? `<p class="contact-section__details">${agencyLines}</p>` : ''}
+        </div>
+        <div class="contact-section__block">
+          <p class="contact-section__intro">
+            If you wish to come in contact with Lovisa herself, please use the information below:
+          </p>
+          ${lovisaEmail ? `<p class="contact-section__details">${lovisaEmail}</p>` : ''}
+          ${renderContactSocialLinks()}
         </div>
       </div>
     </section>
