@@ -458,8 +458,13 @@ function isPastEvent(event: Event): boolean {
   return !isUpcomingEvent(event)
 }
 
+const CALENDAR_MAX_EVENTS = 20
+const CALENDAR_PAST_INITIAL_VISIBLE = 5
+
 function upcomingEvents(): EventEntry[] {
-  return eventEntries.filter((entry) => isUpcomingEvent(entry.event))
+  return eventEntries
+    .filter((entry) => isUpcomingEvent(entry.event))
+    .slice(0, CALENDAR_MAX_EVENTS)
 }
 
 function pastEvents(): EventEntry[] {
@@ -470,8 +475,10 @@ function pastEvents(): EventEntry[] {
         b.event.date.localeCompare(a.event.date) ||
         (b.event.time ?? '').localeCompare(a.event.time ?? ''),
     )
+    .slice(0, CALENDAR_MAX_EVENTS)
 }
 
+/** Only events that appear in the calendar upcoming list (max {@link CALENDAR_MAX_EVENTS}). */
 function eventsForProgramme(programmePath: string): EventEntry[] {
   return upcomingEvents().filter((entry) => entry.event.programme === programmePath)
 }
@@ -688,10 +695,11 @@ function renderScheduleEventDetails(event: Event): string {
   `
 }
 
-function renderScheduleEventRow(entry: EventEntry): string {
+function renderScheduleEventRow(entry: EventEntry, options?: { pastCollapsed?: boolean }): string {
   const { event, id } = entry
   const programmePath = event.programme ?? ''
   const tickets = renderEventTicketsLink(event)
+  const collapsedAttrs = options?.pastCollapsed ? ' hidden data-calendar-past-extra' : ''
 
   return `
     <li
@@ -699,7 +707,7 @@ function renderScheduleEventRow(entry: EventEntry): string {
       data-calendar-event
       data-event-id="${id}"
       data-programme-path="${programmePath}"
-      class="calendar-event rounded-sm py-4 md:py-5"
+      class="calendar-event rounded-sm py-4 md:py-5"${collapsedAttrs}
     >
       <div class="calendar-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 text-lg font-light leading-relaxed md:gap-x-10">
         <div class="flex flex-col items-end gap-y-2">
@@ -715,12 +723,46 @@ function renderScheduleEventRow(entry: EventEntry): string {
   `
 }
 
-function renderScheduleEventList(entries: EventEntry[], emptyMessage: string): string {
+function renderCalendarPastShowMoreButton(): string {
+  return `
+    <div class="calendar-past-show-more mt-6 text-center">
+      <button
+        type="button"
+        data-calendar-past-show-more
+        class="cursor-pointer select-none text-sm tracking-widest text-sand-700 underline decoration-sand-300 underline-offset-4 transition-colors hover:text-gray-900"
+        aria-expanded="false"
+      >
+        SHOW MORE
+      </button>
+    </div>
+  `
+}
+
+function renderScheduleEventList(
+  entries: EventEntry[],
+  emptyMessage: string,
+  options?: { pastInitialVisible?: number },
+): string {
   if (!entries.length) {
     return `<p class="py-8 text-center text-base font-light text-gray-500">${emptyMessage}</p>`
   }
 
-  return `<ul class="calendar-list divide-y divide-sand-200/80">${entries.map((entry) => renderScheduleEventRow(entry)).join('')}</ul>`
+  const pastInitialVisible = options?.pastInitialVisible
+  const rows = entries
+    .map((entry, index) => {
+      const pastCollapsed =
+        pastInitialVisible !== undefined && index >= pastInitialVisible
+      return renderScheduleEventRow(entry, pastCollapsed ? { pastCollapsed: true } : undefined)
+    })
+    .join('')
+
+  const hasPastShowMore =
+    pastInitialVisible !== undefined && entries.length > pastInitialVisible
+
+  return `
+    <ul class="calendar-list divide-y divide-sand-200/80">${rows}</ul>
+    ${hasPastShowMore ? renderCalendarPastShowMoreButton() : ''}
+  `
 }
 
 function renderScheduleTabs(active: ScheduleTab): string {
@@ -779,7 +821,9 @@ function renderScheduleSection(): string {
             ${renderScheduleEventList(upcoming, 'No upcoming performances.')}
           </div>
           <div data-calendar-panel="past" class="calendar-panel" role="tabpanel" hidden>
-            ${renderScheduleEventList(past, 'No past performances.')}
+            ${renderScheduleEventList(past, 'No past performances.', {
+              pastInitialVisible: CALENDAR_PAST_INITIAL_VISIBLE,
+            })}
           </div>
         </div>
       </div>
@@ -1521,6 +1565,34 @@ function bindListenSection(): void {
   })
 }
 
+function mediaStripCardScrollLeft(viewport: HTMLElement, card: HTMLElement): number {
+  return card.getBoundingClientRect().left - viewport.getBoundingClientRect().left + viewport.scrollLeft
+}
+
+function scrollMediaStripByCard(viewport: HTMLElement, direction: -1 | 1): void {
+  const grid = viewport.firstElementChild
+  if (!grid) return
+
+  const cards = Array.from(grid.children).filter((node): node is HTMLElement => node instanceof HTMLElement)
+  if (!cards.length) return
+
+  const scrollLeft = viewport.scrollLeft
+  const slop = 4
+
+  if (direction > 0) {
+    const next = cards.find((card) => mediaStripCardScrollLeft(viewport, card) > scrollLeft + slop)
+    if (next) {
+      viewport.scrollTo({ left: mediaStripCardScrollLeft(viewport, next), behavior: 'smooth' })
+    }
+    return
+  }
+
+  const prev = [...cards].reverse().find((card) => mediaStripCardScrollLeft(viewport, card) < scrollLeft - slop)
+  if (prev) {
+    viewport.scrollTo({ left: mediaStripCardScrollLeft(viewport, prev), behavior: 'smooth' })
+  }
+}
+
 function updateMediaStripNav(strip: HTMLElement): void {
   const viewport = strip.querySelector<HTMLElement>('[data-media-strip-viewport]')
   const prev = strip.querySelector<HTMLButtonElement>('[data-media-strip-prev]')
@@ -1590,12 +1662,8 @@ function bindMediaStrips(): void {
 
     const updateNav = (): void => updateMediaStripNav(strip)
 
-    const scrollPage = (direction: -1 | 1): void => {
-      viewport.scrollBy({ left: direction * viewport.clientWidth * 0.9, behavior: 'smooth' })
-    }
-
-    prev.addEventListener('click', () => scrollPage(-1))
-    next.addEventListener('click', () => scrollPage(1))
+    prev.addEventListener('click', () => scrollMediaStripByCard(viewport, -1))
+    next.addEventListener('click', () => scrollMediaStripByCard(viewport, 1))
     viewport.addEventListener('scroll', updateNav, { passive: true })
     if (typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(updateNav).observe(viewport)
@@ -1932,6 +2000,13 @@ function applyScheduleTab(root: HTMLElement, tab: ScheduleTab): void {
   })
 }
 
+function revealPastCalendarExtras(panel: HTMLElement): void {
+  panel.querySelectorAll<HTMLElement>('[data-calendar-past-extra]').forEach((row) => {
+    row.removeAttribute('hidden')
+  })
+  panel.querySelector<HTMLButtonElement>('[data-calendar-past-show-more]')?.remove()
+}
+
 function showScheduleTabForEvent(eventId: string): void {
   const row = document.getElementById(calendarEventDomId(eventId))
   const root = document.querySelector<HTMLElement>('[data-calendar-root]')
@@ -1940,6 +2015,7 @@ function showScheduleTabForEvent(eventId: string): void {
   const panel = row.closest<HTMLElement>('[data-calendar-panel]')
   const tab = panel?.dataset.calendarPanel as ScheduleTab | undefined
   if (tab) applyScheduleTab(root, tab)
+  if (tab === 'past' && panel && row.hasAttribute('hidden')) revealPastCalendarExtras(panel)
 }
 
 function navigateToProgrammeSchedule(programmePath: string): void {
@@ -1961,6 +2037,16 @@ function navigateToProgrammeSchedule(programmePath: string): void {
 
   if (reducedMotion) highlightScheduleEventsForProgramme(programmePath)
   else window.setTimeout(() => highlightScheduleEventsForProgramme(programmePath), 450)
+}
+
+function bindSchedulePastShowMore(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-calendar-past-show-more]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const panel = button.closest<HTMLElement>('[data-calendar-panel="past"]')
+      if (!panel) return
+      revealPastCalendarExtras(panel)
+    })
+  })
 }
 
 function bindScheduleTabs(): void {
@@ -1999,6 +2085,9 @@ function bindScheduleNavigation(): void {
 
   const row = document.getElementById(hash)
   if (!row) return
+
+  const pastPanel = row.closest<HTMLElement>('[data-calendar-panel="past"]')
+  if (pastPanel && row.hasAttribute('hidden')) revealPastCalendarExtras(pastPanel)
 
   const eventId = row.dataset.eventId
   if (eventId) showScheduleTabForEvent(eventId)
@@ -2135,6 +2224,7 @@ bindAboutSection()
 bindProgrammeCarousels()
 bindProgrammesSection()
 bindScheduleTabs()
+bindSchedulePastShowMore()
 bindScheduleNavigation()
 bindListenSection()
 bindPicturesSection()
