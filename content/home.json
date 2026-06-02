@@ -1,34 +1,36 @@
 {
   "typography": {
     "body": {
-      "family": "Inter",
-      "weight": 400
+      "family": ""
     },
     "heroTitle": {
       "family": "Playfair Display",
-      "weight": 400
+      "weight": 400,
+	  "fontSizeDesktop": 2,
+	  "fontSizeMobile": 1.6
     },
     "heroSubtitle": {
       "family": "Playfair Display",
-      "weight": 400
+      "weight": 300,
+	  "fontSizeDesktop": 1.5,
+	  "fontSizeMobile": 1.4
     },
     "siteNav": {
-      "family": "Playfair Display",
-      "weight": 400
+      "family": ""
     }
   },
   "heroTitle": {
     "text": "LOVISA HULEDAL",
-    "offsetX": 15,
-    "offsetY": 20,
-    "offsetXMobile": 44,
-    "offsetYMobile": 6
+    "offsetX": 20,
+    "offsetY": 15,
+    "offsetXMobile": 50,
+    "offsetYMobile": 5
   },
   "heroSubtitle": {
     "text": "Mezzo-soprano",
     "offsetX": 20,
-    "offsetY": 25,
-    "offsetXMobile": 54,
+    "offsetY": 20,
+    "offsetXMobile": 50,
     "offsetYMobile": 9
   },
   "heroImage": {

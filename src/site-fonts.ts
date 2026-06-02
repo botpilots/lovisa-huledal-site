@@ -5,6 +5,12 @@ export interface FontRoleSettings {
   family?: string
   /** CSS font-weight (100–900). Omit to use the role default. */
   weight?: number
+  /** Font size in rem — used on all viewports when mobile/desktop sizes are omitted. */
+  fontSize?: number
+  /** Font size in rem below 768px. Hero title and subtitle only. */
+  fontSizeMobile?: number
+  /** Font size in rem at 768px and wider. Hero title and subtitle only. */
+  fontSizeDesktop?: number
 }
 
 /** CMS value: family string or { family, weight? } */
@@ -23,6 +29,9 @@ interface ResolvedFontRole {
   family?: string
   weight: number
   italic: boolean
+  fontSize?: string
+  fontSizeMobile?: string
+  fontSizeDesktop?: string
 }
 
 interface FamilyRequirement {
@@ -69,6 +78,23 @@ const ROLE_FAMILY_VAR: Record<TypographyRole, string> = {
   siteNav: '--font-site-nav',
 }
 
+const ROLE_SIZE_VAR: Partial<Record<TypographyRole, string>> = {
+  body: '--font-body-size',
+  heroTitle: '--font-hero-title-size',
+  heroSubtitle: '--font-hero-subtitle-size',
+  siteNav: '--font-site-nav-size',
+}
+
+const ROLE_SIZE_MOBILE_VAR: Partial<Record<TypographyRole, string>> = {
+  heroTitle: '--font-hero-title-size-mobile',
+  heroSubtitle: '--font-hero-subtitle-size-mobile',
+}
+
+const ROLE_SIZE_DESKTOP_VAR: Partial<Record<TypographyRole, string>> = {
+  heroTitle: '--font-hero-title-size-desktop',
+  heroSubtitle: '--font-hero-subtitle-size-desktop',
+}
+
 let metadataPromise: Promise<Map<string, GoogleFontFamilyMeta>> | null = null
 
 function loadMetadata(): Promise<Map<string, GoogleFontFamilyMeta>> {
@@ -92,12 +118,30 @@ function parseFontRole(
 
   const family = choice?.family?.trim() || undefined
   const weight = normalizeWeight(choice?.weight, defaults.weight)
-  return { family, weight, italic: defaults.italic }
+  return { family, weight, italic: defaults.italic, ...resolveFontSizes(choice) }
 }
 
 function normalizeWeight(value: number | undefined, fallback: number): number {
   if (value == null || Number.isNaN(value)) return fallback
   return Math.min(900, Math.max(100, Math.round(value / 100) * 100))
+}
+
+function parseFontSize(value: number | undefined): string | undefined {
+  if (value == null || Number.isNaN(value) || value <= 0) return undefined
+  return `${value}rem`
+}
+
+function resolveFontSizes(
+  choice: FontRoleSettings | undefined,
+): Pick<ResolvedFontRole, 'fontSize' | 'fontSizeMobile' | 'fontSizeDesktop'> {
+  const base = parseFontSize(choice?.fontSize)
+  const mobile = parseFontSize(choice?.fontSizeMobile) ?? base
+  const desktop = parseFontSize(choice?.fontSizeDesktop) ?? base
+  return {
+    fontSize: base,
+    fontSizeMobile: mobile,
+    fontSizeDesktop: desktop,
+  }
 }
 
 function cssFontFamily(name: string | undefined, fallback: string): string {
@@ -307,6 +351,21 @@ async function loadGoogleFontsWithMetadata(
   applyStylesheet(`https://fonts.googleapis.com/css2?${params.join('&')}&display=swap`)
 }
 
+function setOptionalCssVar(root: CSSStyleDeclaration, name: string, value: string | undefined): void {
+  if (value) root.setProperty(name, value)
+  else root.removeProperty(name)
+}
+
+function applyRoleSizeVars(root: CSSStyleDeclaration, role: TypographyRole, resolved: ResolvedFontRole): void {
+  const sizeVar = ROLE_SIZE_VAR[role]
+  if (sizeVar) setOptionalCssVar(root, sizeVar, resolved.fontSize)
+
+  const mobileVar = ROLE_SIZE_MOBILE_VAR[role]
+  const desktopVar = ROLE_SIZE_DESKTOP_VAR[role]
+  if (mobileVar) setOptionalCssVar(root, mobileVar, resolved.fontSizeMobile)
+  if (desktopVar) setOptionalCssVar(root, desktopVar, resolved.fontSizeDesktop)
+}
+
 function applyTypographyCss(
   typography: SiteTypography | undefined,
   metadata: Map<string, GoogleFontFamilyMeta>,
@@ -324,6 +383,7 @@ function applyTypographyCss(
     const familyFallback = role === 'body' ? DEFAULT_BODY_STACK : 'var(--font-body)'
     root.setProperty(ROLE_FAMILY_VAR[role], cssFontFamily(resolved.family, familyFallback))
     root.setProperty(ROLE_WEIGHT_VAR[role], String(effectiveWeight))
+    applyRoleSizeVars(root, role, resolved)
   }
 }
 
@@ -344,5 +404,6 @@ export function syncSiteFonts(typography: SiteTypography | undefined): void {
     const familyFallback = role === 'body' ? DEFAULT_BODY_STACK : 'var(--font-body)'
     root.setProperty(ROLE_FAMILY_VAR[role], cssFontFamily(resolved.family, familyFallback))
     root.setProperty(ROLE_WEIGHT_VAR[role], String(resolved.weight))
+    applyRoleSizeVars(root, role, resolved)
   }
 }
