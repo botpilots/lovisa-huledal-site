@@ -228,28 +228,28 @@ body {
   overflow: visible;
 }
 
-/* Collapsed: mosaic collage (left column on desktop) */
-.about-bio:not([data-expanded='true']) .about-mosaic-grid {
+/* Mosaic collage (default; desktop expanded switches to a single row below) */
+.about-bio .about-mosaic-grid {
   grid-template-columns: repeat(12, 1fr);
   grid-template-rows: repeat(8, minmax(0, 1fr));
 }
 
-.about-bio:not([data-expanded='true']) .about-mosaic-cell--hero {
+.about-bio .about-mosaic-cell--hero {
   grid-column: 1 / 8;
   grid-row: 1 / 6;
 }
 
-.about-bio:not([data-expanded='true']) .about-mosaic-cell--top-right {
+.about-bio .about-mosaic-cell--top-right {
   grid-column: 8 / 13;
   grid-row: 1 / 4;
 }
 
-.about-bio:not([data-expanded='true']) .about-mosaic-cell--bottom-right {
+.about-bio .about-mosaic-cell--bottom-right {
   grid-column: 8 / 13;
   grid-row: 4 / 9;
 }
 
-.about-bio:not([data-expanded='true']) .about-mosaic-cell--bottom-wide {
+.about-bio .about-mosaic-cell--bottom-wide {
   grid-column: 1 / 8;
   grid-row: 6 / 9;
 }
@@ -344,20 +344,18 @@ body {
     grid-column: 1;
   }
 
-  .about-bio:not([data-expanded='true']) .about-mosaic {
+  .about-mosaic {
     grid-row: 1;
   }
 
-  .about-bio:not([data-expanded='true']) .about-copy {
+  .about-copy {
     grid-row: 2;
   }
 
-  .about-bio[data-expanded='true'] .about-mosaic {
-    grid-row: 1;
-  }
-
-  .about-bio[data-expanded='true'] .about-copy {
-    grid-row: 2;
+  /* Absolute images give cells no height; explicit size so mosaic rows resolve */
+  .about-bio .about-mosaic-grid {
+    height: min(72vw, 22rem);
+    min-height: min(72vw, 22rem);
   }
 }
 
