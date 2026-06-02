@@ -459,7 +459,7 @@ function isPastEvent(event: Event): boolean {
 }
 
 const CALENDAR_MAX_EVENTS = 20
-const CALENDAR_PAST_INITIAL_VISIBLE = 5
+const CALENDAR_INITIAL_VISIBLE = 5
 
 function upcomingEvents(): EventEntry[] {
   return eventEntries
@@ -695,11 +695,11 @@ function renderScheduleEventDetails(event: Event): string {
   `
 }
 
-function renderScheduleEventRow(entry: EventEntry, options?: { pastCollapsed?: boolean }): string {
+function renderScheduleEventRow(entry: EventEntry, options?: { collapsed?: boolean }): string {
   const { event, id } = entry
   const programmePath = event.programme ?? ''
   const tickets = renderEventTicketsLink(event)
-  const collapsedAttrs = options?.pastCollapsed ? ' hidden data-calendar-past-extra' : ''
+  const collapsedAttrs = options?.collapsed ? ' hidden data-calendar-extra' : ''
 
   return `
     <li
@@ -723,12 +723,12 @@ function renderScheduleEventRow(entry: EventEntry, options?: { pastCollapsed?: b
   `
 }
 
-function renderCalendarPastShowMoreButton(): string {
+function renderCalendarShowMoreButton(): string {
   return `
-    <div class="calendar-past-show-more mt-6 text-center">
+    <div class="calendar-show-more mt-6 text-center">
       <button
         type="button"
-        data-calendar-past-show-more
+        data-calendar-show-more
         class="cursor-pointer select-none text-sm tracking-widest text-sand-700 underline decoration-sand-300 underline-offset-4 transition-colors hover:text-gray-900"
         aria-expanded="false"
       >
@@ -741,27 +741,25 @@ function renderCalendarPastShowMoreButton(): string {
 function renderScheduleEventList(
   entries: EventEntry[],
   emptyMessage: string,
-  options?: { pastInitialVisible?: number },
+  options?: { initialVisible?: number },
 ): string {
   if (!entries.length) {
     return `<p class="py-8 text-center text-base font-light text-gray-500">${emptyMessage}</p>`
   }
 
-  const pastInitialVisible = options?.pastInitialVisible
+  const initialVisible = options?.initialVisible
   const rows = entries
     .map((entry, index) => {
-      const pastCollapsed =
-        pastInitialVisible !== undefined && index >= pastInitialVisible
-      return renderScheduleEventRow(entry, pastCollapsed ? { pastCollapsed: true } : undefined)
+      const collapsed = initialVisible !== undefined && index >= initialVisible
+      return renderScheduleEventRow(entry, collapsed ? { collapsed: true } : undefined)
     })
     .join('')
 
-  const hasPastShowMore =
-    pastInitialVisible !== undefined && entries.length > pastInitialVisible
+  const hasShowMore = initialVisible !== undefined && entries.length > initialVisible
 
   return `
     <ul class="calendar-list divide-y divide-sand-200/80">${rows}</ul>
-    ${hasPastShowMore ? renderCalendarPastShowMoreButton() : ''}
+    ${hasShowMore ? renderCalendarShowMoreButton() : ''}
   `
 }
 
@@ -818,11 +816,13 @@ function renderScheduleSection(): string {
             ${renderScheduleTabs(active)}
           </div>
           <div data-calendar-panel="upcoming" class="calendar-panel" role="tabpanel">
-            ${renderScheduleEventList(upcoming, 'No upcoming performances.')}
+            ${renderScheduleEventList(upcoming, 'No upcoming performances.', {
+              initialVisible: CALENDAR_INITIAL_VISIBLE,
+            })}
           </div>
           <div data-calendar-panel="past" class="calendar-panel" role="tabpanel" hidden>
             ${renderScheduleEventList(past, 'No past performances.', {
-              pastInitialVisible: CALENDAR_PAST_INITIAL_VISIBLE,
+              initialVisible: CALENDAR_INITIAL_VISIBLE,
             })}
           </div>
         </div>
@@ -1166,11 +1166,11 @@ function renderListenThumbnail(entry: VideoEntry): string {
       data-listen-video="${id}"
       class="listen-thumb group flex min-w-0 cursor-pointer flex-col text-left transition-opacity hover:opacity-90"
     >
-      <span class="listen-thumb-media relative block aspect-video overflow-hidden bg-sand-200">
+      <span class="listen-thumb-media">
         <img
           src="${youtubeThumbnailUrl(ytId)}"
           alt=""
-          class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          class="listen-thumb-image transition-transform duration-300 group-hover:scale-[1.02]"
           loading="lazy"
         />
         <span class="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors group-hover:bg-black/25" aria-hidden="true">
@@ -1247,10 +1247,10 @@ function renderListenDetailShell(): string {
       ${renderMediaCloseButton('data-listen-close', 'Close video')}
       <div class="mx-auto flex min-h-full max-w-7xl flex-col justify-center px-6 py-24 md:py-32">
         <div class="${LISTEN_DETAIL_LAYOUT}">
-          <div class="listen-embed min-w-0 overflow-hidden bg-sand-200">
+          <div class="listen-embed min-w-0">
             <iframe
               data-listen-iframe
-              class="listen-embed-frame h-full w-full"
+              class="listen-embed-frame"
               title=""
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen
@@ -2000,11 +2000,11 @@ function applyScheduleTab(root: HTMLElement, tab: ScheduleTab): void {
   })
 }
 
-function revealPastCalendarExtras(panel: HTMLElement): void {
-  panel.querySelectorAll<HTMLElement>('[data-calendar-past-extra]').forEach((row) => {
+function revealCalendarPanelExtras(panel: HTMLElement): void {
+  panel.querySelectorAll<HTMLElement>('[data-calendar-extra]').forEach((row) => {
     row.removeAttribute('hidden')
   })
-  panel.querySelector<HTMLButtonElement>('[data-calendar-past-show-more]')?.remove()
+  panel.querySelector<HTMLButtonElement>('[data-calendar-show-more]')?.remove()
 }
 
 function showScheduleTabForEvent(eventId: string): void {
@@ -2015,7 +2015,7 @@ function showScheduleTabForEvent(eventId: string): void {
   const panel = row.closest<HTMLElement>('[data-calendar-panel]')
   const tab = panel?.dataset.calendarPanel as ScheduleTab | undefined
   if (tab) applyScheduleTab(root, tab)
-  if (tab === 'past' && panel && row.hasAttribute('hidden')) revealPastCalendarExtras(panel)
+  if (panel && row.hasAttribute('hidden')) revealCalendarPanelExtras(panel)
 }
 
 function navigateToProgrammeSchedule(programmePath: string): void {
@@ -2031,6 +2031,10 @@ function navigateToProgrammeSchedule(programmePath: string): void {
 
   const firstId = programmeEvents[0]?.id
   const firstRow = firstId ? document.getElementById(calendarEventDomId(firstId)) : null
+  if (firstRow) {
+    const panel = firstRow.closest<HTMLElement>('[data-calendar-panel]')
+    if (panel && firstRow.hasAttribute('hidden')) revealCalendarPanelExtras(panel)
+  }
   const target = firstRow ?? calendar
 
   scrollBelowSiteHeader(target, smooth)
@@ -2039,12 +2043,12 @@ function navigateToProgrammeSchedule(programmePath: string): void {
   else window.setTimeout(() => highlightScheduleEventsForProgramme(programmePath), 450)
 }
 
-function bindSchedulePastShowMore(): void {
-  document.querySelectorAll<HTMLButtonElement>('[data-calendar-past-show-more]').forEach((button) => {
+function bindScheduleShowMore(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-calendar-show-more]').forEach((button) => {
     button.addEventListener('click', () => {
-      const panel = button.closest<HTMLElement>('[data-calendar-panel="past"]')
+      const panel = button.closest<HTMLElement>('[data-calendar-panel]')
       if (!panel) return
-      revealPastCalendarExtras(panel)
+      revealCalendarPanelExtras(panel)
     })
   })
 }
@@ -2086,8 +2090,8 @@ function bindScheduleNavigation(): void {
   const row = document.getElementById(hash)
   if (!row) return
 
-  const pastPanel = row.closest<HTMLElement>('[data-calendar-panel="past"]')
-  if (pastPanel && row.hasAttribute('hidden')) revealPastCalendarExtras(pastPanel)
+  const panel = row.closest<HTMLElement>('[data-calendar-panel]')
+  if (panel && row.hasAttribute('hidden')) revealCalendarPanelExtras(panel)
 
   const eventId = row.dataset.eventId
   if (eventId) showScheduleTabForEvent(eventId)
@@ -2224,7 +2228,7 @@ bindAboutSection()
 bindProgrammeCarousels()
 bindProgrammesSection()
 bindScheduleTabs()
-bindSchedulePastShowMore()
+bindScheduleShowMore()
 bindScheduleNavigation()
 bindListenSection()
 bindPicturesSection()
