@@ -2138,12 +2138,12 @@ function renderApp(): void {
             <nav class="site-nav">
               <div class="site-nav-row">
                 <a href="#about" class="site-nav-link">ABOUT</a>
-                <a href="#programmes" class="site-nav-link">PROGRAMMES</a>
                 <a href="#calendar" class="site-nav-link">CALENDAR</a>
+                <a href="#listen" class="site-nav-link">LISTEN</a>
               </div>
               <div class="site-nav-row">
-                <a href="#listen" class="site-nav-link">LISTEN</a>
                 <a href="#pictures" class="site-nav-link">PICTURES</a>
+                <a href="#programmes" class="site-nav-link">PROGRAMMES</a>
                 <a href="#contact" class="site-nav-link">CONTACT</a>
               </div>
             </nav>
