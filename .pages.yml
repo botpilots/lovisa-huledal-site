@@ -71,6 +71,84 @@ content:
               min: 0
               max: 100
 
+      - name: typography
+        label: Typography
+        description: Google Font family names (e.g. Roboto, Inter, Playfair Display). Weights are optional — the site picks sensible defaults and loads only what each font supports.
+        type: object
+        fields:
+          - name: body
+            label: Body text
+            description: General page text — biography, sections, contact, etc.
+            type: object
+            fields:
+              - name: family
+                label: Font family
+                type: string
+
+              - name: weight
+                label: Font weight
+                description: "100–900. Default 400."
+                type: number
+                required: false
+                options:
+                  min: 100
+                  max: 900
+                  step: 100
+
+          - name: heroTitle
+            label: Hero title
+            type: object
+            fields:
+              - name: family
+                label: Font family
+                type: string
+
+              - name: weight
+                label: Font weight
+                description: "100–900. Default 300."
+                type: number
+                required: false
+                options:
+                  min: 100
+                  max: 900
+                  step: 100
+
+          - name: heroSubtitle
+            label: Hero subtitle
+            type: object
+            fields:
+              - name: family
+                label: Font family
+                type: string
+
+              - name: weight
+                label: Font weight
+                description: "100–900. Default 300 (italic)."
+                type: number
+                required: false
+                options:
+                  min: 100
+                  max: 900
+                  step: 100
+
+          - name: siteNav
+            label: Hero footer / navigation
+            type: object
+            fields:
+              - name: family
+                label: Font family
+                type: string
+
+              - name: weight
+                label: Font weight
+                description: "100–900. Default 400."
+                type: number
+                required: false
+                options:
+                  min: 100
+                  max: 900
+                  step: 100
+
       - name: heroSubtitle
         label: Hero subtitle
         description: Subtitle on the landing image (default top right). Offsets (%) position the center of the text in the hero.

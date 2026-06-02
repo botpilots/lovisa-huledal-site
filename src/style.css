@@ -67,6 +67,8 @@ html {
   width: 100%;
   max-width: var(--site-header-nav-max);
   margin-inline: auto;
+  font-family: var(--font-site-nav, inherit);
+  font-weight: var(--font-site-nav-weight, 400);
   font-size: 0.75rem;
   letter-spacing: 0.025em;
   color: rgb(229 231 235);
@@ -107,7 +109,8 @@ html {
 }
 
 body {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: var(--font-body, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+  font-weight: var(--font-body-weight, 400);
   color: #1a1a1a;
   background-color: var(--color-sand-50);
 }
@@ -141,8 +144,9 @@ body {
 }
 
 .hero-heading--title {
+  font-family: var(--font-hero-title, inherit);
   font-size: clamp(1.125rem, 2.5vw, 1.5rem);
-  font-weight: 300;
+  font-weight: var(--font-hero-title-weight, 300);
   letter-spacing: 0.2em;
   line-height: 1.3;
 }
@@ -154,8 +158,9 @@ body {
 }
 
 .hero-heading--subtitle {
+  font-family: var(--font-hero-subtitle, inherit);
   font-size: clamp(1rem, 2vw, 1.25rem);
-  font-weight: 300;
+  font-weight: var(--font-hero-subtitle-weight, 300);
   font-style: italic;
   letter-spacing: 0.2em;
   line-height: 1.3;

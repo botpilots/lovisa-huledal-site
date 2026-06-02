@@ -1,6 +1,7 @@
 import './style.css'
 import { animateAboutLayout } from './about-layout-animation'
 import { syncSiteIcon, type SiteIconSettings } from './site-icon'
+import { syncSiteFonts, type SiteTypography } from './site-fonts'
 import { marked } from 'marked'
 import home from '../content/home.json'
 import contactData from '../content/contact.json'
@@ -24,6 +25,7 @@ interface HeroTextBlock {
 }
 
 interface HomeContent {
+  typography?: SiteTypography
   heroTitle?: HeroTextBlock
   heroSubtitle?: HeroTextBlock
   heroImage?: MosaicImage
@@ -2120,6 +2122,7 @@ function bindSiteHeader(): void {
 }
 
 syncHeroBackground()
+syncSiteFonts(content.typography)
 syncSiteIcon({
   siteIcon: content.siteIcon,
   heroImage: content.heroImage?.image,
