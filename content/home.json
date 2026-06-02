@@ -1,10 +1,42 @@
 {
-  "title": "mezzo-soprano",
-  "titlePosition": "bottom-right",
+  "typography": {
+    "body": {
+      "family": ""
+    },
+    "heroTitle": {
+      "family": "Playfair Display",
+      "weight": 400,
+	  "fontSizeDesktop": 2,
+	  "fontSizeMobile": 1.6
+    },
+    "heroSubtitle": {
+      "family": "Playfair Display",
+      "weight": 300,
+	  "fontSizeDesktop": 1.5,
+	  "fontSizeMobile": 1.4
+    },
+    "siteNav": {
+      "family": ""
+    }
+  },
+  "heroTitle": {
+    "text": "LOVISA HULEDAL",
+    "offsetX": 20,
+    "offsetY": 15,
+    "offsetXMobile": 50,
+    "offsetYMobile": 5
+  },
+  "heroSubtitle": {
+    "text": "Mezzo-soprano",
+    "offsetX": 20,
+    "offsetY": 20,
+    "offsetXMobile": 50,
+    "offsetYMobile": 9
+  },
   "heroImage": {
-    "image": "/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg",
+    "image": "/media/lovisa-startbild.avif",
     "offsetX": 50,
-    "offsetY": 20
+    "offsetY": 50
   },
   "siteIcon": {
     "image": "/media/jolo-mb-4437.jpeg",

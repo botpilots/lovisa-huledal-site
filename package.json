@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "fonts:index": "node scripts/generate-font-index.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

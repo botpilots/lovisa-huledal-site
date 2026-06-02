@@ -30,26 +30,249 @@ content:
     operations:
       delete: false
     fields:
-      - name: title
+      - name: heroTitle
         label: Hero title
-        description: Shown on the landing image in italics (e.g. mezzo-soprano).
-        type: string
+        description: Main name on the landing image (default top left). Offsets (%) position the center of the text in the hero.
+        type: object
+        fields:
+          - name: text
+            label: Text
+            type: string
 
-      - name: titlePosition
-        label: Hero title position
-        description: Corner of the landing image where the title appears (with padding from the edge).
-        type: select
-        default: bottom-left
-        options:
-          values:
-            - top-left
-            - top-right
-            - bottom-left
-            - bottom-right
+          - name: offsetX
+            label: Horizontal position — desktop (%)
+            description: Text center on viewports 768px and wider (0 = left, 100 = right).
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical position — desktop (%)
+            description: Text center on viewports 768px and wider (0 = top, 100 = bottom).
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetXMobile
+            label: Horizontal position — mobile (%)
+            description: Text center below 768px width only. Leave empty to use the desktop value.
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetYMobile
+            label: Vertical position — mobile (%)
+            description: Text center below 768px width only. Leave empty to use the desktop value.
+            type: number
+            options:
+              min: 0
+              max: 100
+
+      - name: typography
+        label: Typography
+        description: Google Font family names (e.g. Roboto, Inter, Playfair Display). Weights are optional — the site picks sensible defaults and loads only what each font supports.
+        type: object
+        fields:
+          - name: body
+            label: Body text
+            description: General page text — biography, sections, contact, etc.
+            type: object
+            fields:
+              - name: family
+                label: Font family
+                type: string
+
+              - name: weight
+                label: Font weight
+                description: "100–900. Default 400."
+                type: number
+                required: false
+                options:
+                  min: 100
+                  max: 900
+                  step: 100
+
+              - name: fontSize
+                label: Font size (rem)
+                description: Optional base text size in rem, e.g. 1 for 1rem.
+                type: number
+                required: false
+                options:
+                  min: 0.5
+                  max: 3
+                  step: 0.125
+
+          - name: heroTitle
+            label: Hero title
+            type: object
+            fields:
+              - name: family
+                label: Font family
+                type: string
+
+              - name: weight
+                label: Font weight
+                description: "100–900. Default 300."
+                type: number
+                required: false
+                options:
+                  min: 100
+                  max: 900
+                  step: 100
+
+              - name: fontSize
+                label: Font size — all screens (rem)
+                description: Optional size in rem. Also used as fallback when mobile or desktop size is omitted.
+                type: number
+                required: false
+                options:
+                  min: 0.5
+                  max: 6
+                  step: 0.125
+
+              - name: fontSizeMobile
+                label: Font size — mobile (rem)
+                description: Below 768px. Default uses responsive clamp.
+                type: number
+                required: false
+                options:
+                  min: 0.5
+                  max: 6
+                  step: 0.125
+
+              - name: fontSizeDesktop
+                label: Font size — desktop (rem)
+                description: 768px and wider. Default uses responsive clamp.
+                type: number
+                required: false
+                options:
+                  min: 0.5
+                  max: 6
+                  step: 0.125
+
+          - name: heroSubtitle
+            label: Hero subtitle
+            type: object
+            fields:
+              - name: family
+                label: Font family
+                type: string
+
+              - name: weight
+                label: Font weight
+                description: "100–900. Default 300 (italic)."
+                type: number
+                required: false
+                options:
+                  min: 100
+                  max: 900
+                  step: 100
+
+              - name: fontSize
+                label: Font size — all screens (rem)
+                description: Optional size in rem. Also used as fallback when mobile or desktop size is omitted.
+                type: number
+                required: false
+                options:
+                  min: 0.5
+                  max: 6
+                  step: 0.125
+
+              - name: fontSizeMobile
+                label: Font size — mobile (rem)
+                description: Below 768px. Default uses responsive clamp.
+                type: number
+                required: false
+                options:
+                  min: 0.5
+                  max: 6
+                  step: 0.125
+
+              - name: fontSizeDesktop
+                label: Font size — desktop (rem)
+                description: 768px and wider. Default uses responsive clamp.
+                type: number
+                required: false
+                options:
+                  min: 0.5
+                  max: 6
+                  step: 0.125
+
+          - name: siteNav
+            label: Hero footer / navigation
+            type: object
+            fields:
+              - name: family
+                label: Font family
+                type: string
+
+              - name: weight
+                label: Font weight
+                description: "100–900. Default 400."
+                type: number
+                required: false
+                options:
+                  min: 100
+                  max: 900
+                  step: 100
+
+              - name: fontSize
+                label: Font size (rem)
+                description: "Navigation link size. Default 0.75rem (0.875rem from 640px)."
+                type: number
+                required: false
+                options:
+                  min: 0.5
+                  max: 2
+                  step: 0.0625
+
+      - name: heroSubtitle
+        label: Hero subtitle
+        description: Subtitle on the landing image (default top right). Offsets (%) position the center of the text in the hero.
+        type: object
+        fields:
+          - name: text
+            label: Text
+            type: string
+
+          - name: offsetX
+            label: Horizontal position — desktop (%)
+            description: Text center on viewports 768px and wider (0 = left, 100 = right).
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetY
+            label: Vertical position — desktop (%)
+            description: Text center on viewports 768px and wider (0 = top, 100 = bottom).
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetXMobile
+            label: Horizontal position — mobile (%)
+            description: Text center below 768px width only. Leave empty to use the desktop value.
+            type: number
+            options:
+              min: 0
+              max: 100
+
+          - name: offsetYMobile
+            label: Vertical position — mobile (%)
+            description: Text center below 768px width only. Leave empty to use the desktop value.
+            type: number
+            options:
+              min: 0
+              max: 100
 
       - name: heroImage
         label: Front page image
-        description: Full-screen landing photo behind the hero title.
+        description: Full-screen landing photo behind the hero title and subtitle.
         type: object
         fields:
           - name: image
@@ -193,9 +416,9 @@ content:
         label: Title
         type: string
 
-      - name: headerColor
-        label: Header colour
-        description: Optional. Background for the title band (or full media area when there is no image). Leave empty to use the next sand tone from the site theme — each programme gets a different colour until the palette cycles.
+      - name: color
+        label: Programme colour
+        description: Accent for the title band, open panel tint, events sub-banner, and image carousel. Leave empty to auto-assign from the Scandinavian palette (dark green, red, blue, gold). Hex or rgb, e.g. #345a75.
         type: color
 
       - name: description

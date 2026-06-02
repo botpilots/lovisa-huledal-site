@@ -1,6 +1,7 @@
 import './style.css'
 import { animateAboutLayout } from './about-layout-animation'
 import { syncSiteIcon, type SiteIconSettings } from './site-icon'
+import { syncSiteFonts, type SiteTypography } from './site-fonts'
 import { marked } from 'marked'
 import home from '../content/home.json'
 import contactData from '../content/contact.json'
@@ -15,23 +16,23 @@ interface MosaicImage {
   alt?: string
 }
 
-type HeroTitlePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+interface HeroTextBlock {
+  text?: string
+  offsetX?: number
+  offsetY?: number
+  offsetXMobile?: number
+  offsetYMobile?: number
+}
 
 interface HomeContent {
-  title?: string
-  titlePosition?: string
+  typography?: SiteTypography
+  heroTitle?: HeroTextBlock
+  heroSubtitle?: HeroTextBlock
   heroImage?: MosaicImage
   siteIcon?: SiteIconSettings
   biography: string
   biographyEn: string
   aboutMosaic: MosaicImage[]
-}
-
-const HERO_TITLE_POSITION_CLASS: Record<HeroTitlePosition, string> = {
-  'top-left': 'hero-title--top left-0 text-left',
-  'top-right': 'hero-title--top right-0 text-right',
-  'bottom-left': 'bottom-0 left-0 text-left',
-  'bottom-right': 'bottom-0 right-0 text-right',
 }
 
 interface ProgrammeRepertoireEntry {
@@ -47,6 +48,9 @@ interface ProgrammeImage {
 
 interface Programme {
   title: string
+  /** Programme accent (banner, panel tint, carousel). Prefer `color`; `headerColor` is legacy. */
+  color?: string
+  /** @deprecated Use `color` */
   headerColor?: string
   description: string
   images?: (string | ProgrammeImage)[]
@@ -55,13 +59,14 @@ interface Programme {
   repertoire?: ProgrammeRepertoireEntry[]
 }
 
-/** Theme sand palette (sand-500 … sand-900) for programmes without a CMS colour. */
+/** Scandinavian accent bands for programmes without a CMS colour. */
 const PROGRAMME_HEADER_PALETTE = [
-  '#b09a76',
-  '#a28661',
-  '#886d4e',
-  '#715b43',
-  '#5c4b38',
+  '#2d5046', // dark green
+  '#944648', // muted red
+  '#345a75', // Scandinavian blue
+  '#6e5e2a', // muted Nordic gold (readable with white text)
+  '#1e3f5c', // deep fjord blue
+  '#3a5f52', // pine green
 ] as const
 
 interface ProgrammeEntry {
@@ -134,7 +139,7 @@ interface ContactContent {
 
 const DEFAULT_HERO_IMAGE = '/media/6-lovisa-huledal-med-inlevelse-framfor-orkester.jpeg'
 
-const AGENCY_LOGO_SRC = '/media/c50241_ff6d03952d35443998f5dca8861f44e6~mv2.avif'
+const CONTACT_IMAGE_SRC = '/media/jolo-mb-4244.jpeg'
 
 const SOCIAL_ICON_SRC = {
   facebook: '/media/facebook.svg',
@@ -166,8 +171,8 @@ function videoIdFromGlob(filePath: string): string {
   return eventIdFromGlob(filePath)
 }
 
-function scheduleEventDomId(eventId: string): string {
-  return `schedule-event-${eventId}`
+function calendarEventDomId(eventId: string): string {
+  return `calendar-event-${eventId}`
 }
 
 const programmeModules = import.meta.glob<Programme>('../content/programmes/*.json', {
@@ -181,6 +186,8 @@ const programmeEntries: ProgrammeEntry[] = Object.entries(programmeModules)
     programme,
   }))
   .sort((a, b) => a.programme.title.localeCompare(b.programme.title, 'sv'))
+
+const programmeHeaderColors = assignProgrammeHeaderColors(programmeEntries)
 
 const eventModules = import.meta.glob<Event>('../content/events/*.json', {
   eager: true,
@@ -203,7 +210,7 @@ const videoEntries: VideoEntry[] = Object.entries(videoModules)
 const PHOTO_CATEGORIES: PhotoCategory[] = ['portraits', 'onStage']
 
 const PHOTO_CATEGORY_LABELS: Record<PhotoCategory, string> = {
-  portraits: 'PORTRAITS',
+  portraits: 'PORTRAIT',
   onStage: 'ON STAGE',
 }
 
@@ -244,28 +251,21 @@ const eventEntries: EventEntry[] = Object.entries(eventModules)
 const BIOGRAPHY_PROSE =
   'biography-prose text-lg font-light leading-relaxed text-gray-600 [&_h5]:text-lg [&_h5]:font-normal [&_h5]:text-gray-900 [&_h5]:mb-6 [&_p]:mb-6 [&_p:last-child]:mb-0 [&_em]:italic [&_ul]:mb-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2'
 
+/** Same as biography prose, but lists align flush with paragraphs (no hanging bullets). */
+const PROGRAMME_DESCRIPTION_PROSE =
+  'biography-prose text-lg font-light leading-relaxed text-gray-600 [&_h5]:text-lg [&_h5]:font-normal [&_h5]:text-gray-900 [&_h5]:mb-6 [&_p]:mb-6 [&_p:last-child]:mb-0 [&_em]:italic [&_ol]:mb-6 [&_ol]:list-decimal [&_ol]:list-inside [&_ol]:pl-0 [&_ul]:mb-6 [&_ul]:list-disc [&_ul]:list-inside [&_ul]:pl-0 [&_li]:mb-2'
+
 /** Desktop: extra section padding; top −10% vs even 5.25rem, title gap +10% vs 3.25rem */
 const SECTION_PADDING_Y = 'py-16 md:pt-[4.725rem] md:pb-[5.25rem]'
 const SECTION_TITLE_MARGIN = 'mb-8 md:mb-[3.575rem]'
 const SECTION_TITLE_BASE = 'select-none text-3xl font-light tracking-widest text-gray-900'
 const ABOUT_SECTION_PADDING = 'pt-12 pb-16 md:pt-[3.825rem] md:pb-[5.25rem]'
 const ABOUT_SECTION_TITLE_MARGIN = 'mb-12 md:mb-[4.675rem]'
-const SECTION_CONTENT_STACK = 'space-y-12 md:space-y-[4.25rem]'
-const PICTURES_CONTENT_STACK = 'space-y-20 md:space-y-[6.25rem]'
-const PROGRAMME_TABS_CLASS =
-  'programme-tabs mb-4 grid w-full shrink-0 py-2 lg:mb-8 lg:py-4'
-
-const PROGRAMME_LAYOUT = 'programme-grid grid min-w-0 gap-5 sm:grid-cols-5 sm:items-start sm:gap-10'
+const SECTION_TAB_BASE =
+  'cursor-pointer select-none border-0 bg-transparent p-0 text-sm tracking-[0.25em] transition-colors'
+const SECTION_TAB_ACTIVE = 'text-sand-800'
+const SECTION_TAB_INACTIVE = 'text-gray-400 hover:text-gray-600'
 const LISTEN_DETAIL_LAYOUT = 'grid min-w-0 gap-5 lg:grid-cols-2 lg:items-start lg:gap-10'
-const PROGRAMME_MEDIA_STACK = 'programme-media-stack'
-const PROGRAMME_MEDIA_STACK_WITH_IMAGE = 'programme-media-stack programme-media-stack--with-carousel'
-const PROGRAMME_TAB_BASE =
-  'justify-self-center w-fit cursor-pointer select-none text-sm tracking-widest transition-colors'
-const PROGRAMME_TAB_ACTIVE = 'text-gray-900 border-b border-gray-900'
-const PROGRAMME_TAB_INACTIVE = 'text-gray-400 hover:text-gray-600'
-
-type ProgrammeTab = 'description' | 'repertoire'
-
 const SCHEDULE_HIGHLIGHT_MS = 3200
 const EVENT_DATE_FORMAT = new Intl.DateTimeFormat('sv-SE', {
   day: 'numeric',
@@ -291,6 +291,11 @@ let language: Language = 'sv'
 let aboutExpanded = false
 let listenSelectedVideoId: string | null = null
 let picturesSelectedPhotoId: string | null = null
+let programmeSelectedPath: string | null = null
+
+const PROGRAMME_DETAIL_AUTOPLAY_MS = 8000
+let programmeDetailAutoplayTimer: ReturnType<typeof setInterval> | null = null
+let programmeDetailAutoplayCarousel: HTMLElement | null = null
 
 function escapeHtml(text: string): string {
   return text
@@ -346,23 +351,65 @@ function getMosaicImages(): MosaicImage[] {
   return (content.aboutMosaic ?? []).slice(0, 4)
 }
 
-function parseHeroTitlePosition(raw: string | undefined): HeroTitlePosition {
-  const value = raw?.trim() as HeroTitlePosition | undefined
-  if (value && value in HERO_TITLE_POSITION_CLASS) return value
-  return 'bottom-left'
+function clampHeroOffset(value: number | undefined, fallback: number): number {
+  const n = value ?? fallback
+  return Math.min(100, Math.max(0, n))
 }
 
-function renderHeroTitle(): string {
-  const title = content.title?.trim()
-  if (!title) return ''
+type HeroTextDefaults = {
+  offsetX: number
+  offsetY: number
+  offsetXMobile?: number
+  offsetYMobile?: number
+}
 
-  const position = parseHeroTitlePosition(content.titlePosition)
+function heroTextPositionStyle(
+  block: HeroTextBlock | undefined,
+  defaults: HeroTextDefaults,
+): string {
+  const xDesktop = clampHeroOffset(block?.offsetX, defaults.offsetX)
+  const yDesktop = clampHeroOffset(block?.offsetY, defaults.offsetY)
+  const xMobile = clampHeroOffset(
+    block?.offsetXMobile ?? block?.offsetX,
+    defaults.offsetXMobile ?? defaults.offsetX,
+  )
+  const yMobile = clampHeroOffset(
+    block?.offsetYMobile ?? block?.offsetY,
+    defaults.offsetYMobile ?? defaults.offsetY,
+  )
+  return `--hero-offset-x:${xMobile};--hero-offset-y:${yMobile};--hero-offset-x-desktop:${xDesktop};--hero-offset-y-desktop:${yDesktop}`
+}
+
+function renderHeroHeading(
+  block: HeroTextBlock | undefined,
+  defaults: HeroTextDefaults,
+  className: string,
+): string {
+  const text = block?.text?.trim()
+  if (!text) return ''
 
   return `
-    <p class="hero-title absolute z-10 p-6 text-xl font-light italic tracking-[0.2em] text-white/95 md:p-10 md:text-2xl ${HERO_TITLE_POSITION_CLASS[position]}">
-      ${escapeHtml(title)}
+    <p class="hero-heading ${className}" style="${heroTextPositionStyle(block, defaults)}">
+      ${escapeHtml(text)}
     </p>
   `
+}
+
+function renderHeroHeadings(): string {
+  return [
+    renderHeroHeading(
+      content.heroTitle,
+      { offsetX: 6, offsetY: 10, offsetXMobile: 50, offsetYMobile: 12 },
+      'hero-heading--title',
+    ),
+    renderHeroHeading(
+      content.heroSubtitle,
+      { offsetX: 94, offsetY: 10, offsetXMobile: 50, offsetYMobile: 22 },
+      'hero-heading--subtitle',
+    ),
+  ]
+    .filter(Boolean)
+    .join('')
 }
 
 function imageObjectPosition(photo: { offsetX?: number; offsetY?: number }): string {
@@ -407,7 +454,7 @@ function isUpcomingEvent(event: Event): boolean {
   return eventStartsAt(event) >= new Date()
 }
 
-function isPriorEvent(event: Event): boolean {
+function isPastEvent(event: Event): boolean {
   return !isUpcomingEvent(event)
 }
 
@@ -415,9 +462,9 @@ function upcomingEvents(): EventEntry[] {
   return eventEntries.filter((entry) => isUpcomingEvent(entry.event))
 }
 
-function priorEvents(): EventEntry[] {
+function pastEvents(): EventEntry[] {
   return eventEntries
-    .filter((entry) => isPriorEvent(entry.event))
+    .filter((entry) => isPastEvent(entry.event))
     .sort(
       (a, b) =>
         b.event.date.localeCompare(a.event.date) ||
@@ -434,7 +481,7 @@ function programmeTitleForPath(programmePath: string): string | undefined {
 }
 
 /** Name, or programme title; with programme in parentheses when both are set. */
-function scheduleEventDisplayTitle(event: Event): string {
+function calendarEventDisplayTitle(event: Event): string {
   const name = event.name?.trim()
   const programmeTitle = event.programme ? programmeTitleForPath(event.programme) : undefined
 
@@ -447,6 +494,12 @@ function scheduleEventDisplayTitle(event: Event): string {
 function formatEventWhen(event: Event): string {
   const date = EVENT_DATE_FORMAT.format(new Date(`${event.date}T12:00:00`))
   return event.time ? `${date}, ${event.time}` : date
+}
+
+function getProgrammeColor(programme: Programme): string | undefined {
+  return (
+    parseProgrammeHeaderColor(programme.color) ?? parseProgrammeHeaderColor(programme.headerColor)
+  )
 }
 
 function parseProgrammeHeaderColor(raw: string | undefined): string | undefined {
@@ -464,7 +517,7 @@ function assignProgrammeHeaderColors(entries: ProgrammeEntry[]): string[] {
   let stackIndex = 0
 
   for (let i = 0; i < entries.length; i++) {
-    const custom = parseProgrammeHeaderColor(entries[i].programme.headerColor)
+    const custom = getProgrammeColor(entries[i].programme)
     if (custom) {
       colors.push(custom)
       continue
@@ -547,46 +600,12 @@ function renderProgrammeCarouselDots(count: number): string {
         data-carousel-dot="${i}"
         aria-label="Show image ${i + 1} of ${count}"
         aria-current="${active}"
-        class="flex h-8 w-8 cursor-pointer select-none items-center justify-center rounded-full transition-colors hover:opacity-80"
+        class="programme-carousel-dot"
       >
-        <span
-          class="block h-2 w-2 rounded-full transition-colors ${active ? 'bg-gray-900' : 'bg-gray-400/55'}"
-          data-carousel-dot-marker
-          aria-hidden="true"
-        ></span>
+        <span class="programme-carousel-dot__marker" data-carousel-dot-marker aria-hidden="true"></span>
       </button>
     `
   }).join('')
-}
-
-function renderProgrammeCarouselFrame(images: ProgrammeImage[]): string {
-  const slides = images
-    .map(
-      (img, i) => `
-        <img
-          data-carousel-slide="${i}"
-          src="${assetUrl(img.image!)}"
-          alt=""
-          style="${imageObjectPosition(img)}"
-          class="programme-carousel-slide absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
-          ${i === 0 ? '' : 'hidden'}
-        />
-      `,
-    )
-    .join('')
-
-  const multi = images.length > 1
-  const controls = multi
-    ? `${renderProgrammeCarouselChevron('prev')}${renderProgrammeCarouselChevron('next')}`
-    : ''
-
-  return `
-    <div class="programme-media-frame relative min-h-0 overflow-hidden bg-sand-200">
-      <div class="absolute inset-0">${slides}</div>
-      ${controls}
-    </div>
-  `
 }
 
 function renderProgrammeCarouselDotsBar(count: number): string {
@@ -597,17 +616,11 @@ function renderProgrammeCarouselDotsBar(count: number): string {
   `
 }
 
-function programmeAvailableTabs(programme: Programme): ProgrammeTab[] {
-  const tabs: ProgrammeTab[] = ['description']
-  if (programme.repertoire?.length) tabs.push('repertoire')
-  return tabs
-}
-
-function renderProgrammeRepertoirePanel(entries: ProgrammeRepertoireEntry[]): string {
+function renderProgrammeRepertoireList(entries: ProgrammeRepertoireEntry[]): string {
   const items = entries
     .map(
       (entry) => `
-        <li class="break-inside-avoid">
+        <li class="break-inside-avoid text-left">
           <span class="text-gray-900">${entry.composer}</span>
           <span class="text-gray-600"> — <span class="italic">${entry.piece}</span></span>
         </li>
@@ -615,7 +628,21 @@ function renderProgrammeRepertoirePanel(entries: ProgrammeRepertoireEntry[]): st
     )
     .join('')
 
-  return `<ul class="grid gap-x-10 gap-y-2 text-base font-light leading-relaxed sm:grid-cols-2">${items}</ul>`
+  return `<ul class="programme-accordion-repertoire__list">${items}</ul>`
+}
+
+function renderProgrammeRepertoireSection(
+  entries: ProgrammeRepertoireEntry[],
+  headingId: string,
+): string {
+  if (!entries.length) return ''
+
+  return `
+    <section class="programme-accordion-repertoire" aria-labelledby="${headingId}">
+      <h3 id="${headingId}" class="programme-accordion-repertoire__title">Repertoire</h3>
+      ${renderProgrammeRepertoireList(entries)}
+    </section>
+  `
 }
 
 function renderExternalLinkIcon(size = 16): string {
@@ -637,7 +664,7 @@ function renderEventTicketsLink(event: Event): string {
       class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sand-400/90 bg-sand-100/90 px-3 py-1 text-xs tracking-widest text-sand-800 transition-colors hover:border-sand-600 hover:bg-sand-200 hover:text-gray-900"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Tickets for ${scheduleEventDisplayTitle(event)} (opens in new tab)"
+      aria-label="Tickets for ${calendarEventDisplayTitle(event)} (opens in new tab)"
     >
       TICKETS
       ${renderExternalLinkIcon(14)}
@@ -646,7 +673,7 @@ function renderEventTicketsLink(event: Event): string {
 }
 
 function renderScheduleEventDetails(event: Event): string {
-  const title = `<span class="text-gray-900">${scheduleEventDisplayTitle(event)}</span>`
+  const title = `<span class="text-gray-900">${calendarEventDisplayTitle(event)}</span>`
   const locationText = event.location?.trim()
 
   const locationRow = locationText
@@ -668,13 +695,13 @@ function renderScheduleEventRow(entry: EventEntry): string {
 
   return `
     <li
-      id="${scheduleEventDomId(id)}"
-      data-schedule-event
+      id="${calendarEventDomId(id)}"
+      data-calendar-event
       data-event-id="${id}"
       data-programme-path="${programmePath}"
-      class="schedule-event rounded-sm py-4 md:py-5"
+      class="calendar-event rounded-sm py-4 md:py-5"
     >
-      <div class="schedule-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 text-lg font-light leading-relaxed md:gap-x-10">
+      <div class="calendar-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 text-lg font-light leading-relaxed md:gap-x-10">
         <div class="flex flex-col items-end gap-y-2">
           <time datetime="${event.date}" class="text-right tracking-wide text-sand-800">${formatEventWhen(event)}</time>
           ${tickets ? `<span class="flex justify-end">${tickets}</span>` : ''}
@@ -693,18 +720,18 @@ function renderScheduleEventList(entries: EventEntry[], emptyMessage: string): s
     return `<p class="py-8 text-center text-base font-light text-gray-500">${emptyMessage}</p>`
   }
 
-  return `<ul class="schedule-list divide-y divide-sand-200/80">${entries.map((entry) => renderScheduleEventRow(entry)).join('')}</ul>`
+  return `<ul class="calendar-list divide-y divide-sand-200/80">${entries.map((entry) => renderScheduleEventRow(entry)).join('')}</ul>`
 }
 
 function renderScheduleTabs(active: ScheduleTab): string {
-  const tabs: ScheduleTab[] = ['upcoming', 'prior']
-  return tabs
+  const tabs: ScheduleTab[] = ['upcoming', 'past']
+  const buttons = tabs
     .map(
       (id) => `
         <button
           type="button"
-          data-schedule-tab="${id}"
-          class="${scheduleTabButtonClass(id, active)}"
+          data-calendar-tab="${id}"
+          class="${calendarTabButtonClass(id, active)}"
           role="tab"
           aria-selected="${id === active}"
         >
@@ -712,20 +739,26 @@ function renderScheduleTabs(active: ScheduleTab): string {
         </button>
       `,
     )
-    .join('')
+    .join('<span class="section-tabs__sep" aria-hidden="true">|</span>')
+
+  return `
+    <div class="section-tabs" role="tablist">
+      ${buttons}
+    </div>
+  `
 }
 
 function renderScheduleSection(): string {
   const upcoming = upcomingEvents()
-  const prior = priorEvents()
-  const hasAny = upcoming.length > 0 || prior.length > 0
+  const past = pastEvents()
+  const hasAny = upcoming.length > 0 || past.length > 0
   const active: ScheduleTab = 'upcoming'
 
   if (!hasAny) {
     return `
-      <section id="schedule" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
+      <section id="calendar" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
         <div class="mx-auto max-w-4xl text-center">
-          <h2 class="${SECTION_TITLE_MARGIN} ${SECTION_TITLE_BASE}">SCHEDULE</h2>
+          <h2 class="${SECTION_TITLE_MARGIN} ${SECTION_TITLE_BASE}">CALENDAR</h2>
           <p class="text-lg font-light leading-relaxed text-gray-600">
             No performances listed at the moment.
           </p>
@@ -735,22 +768,18 @@ function renderScheduleSection(): string {
   }
 
   return `
-    <section id="schedule" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
+    <section id="calendar" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-5xl">
-        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">SCHEDULE</h2>
-        <div data-schedule-root data-active-tab="${active}">
-          <div
-            class="${PROGRAMME_TABS_CLASS} mx-auto max-w-md"
-            role="tablist"
-            style="grid-template-columns: repeat(2, minmax(0, 1fr))"
-          >
+        <div data-calendar-root data-active-tab="${active}">
+          <div class="section-intro">
+            <h2 class="section-intro__title text-center ${SECTION_TITLE_BASE}">CALENDAR</h2>
             ${renderScheduleTabs(active)}
           </div>
-          <div data-schedule-panel="upcoming" class="schedule-panel">
+          <div data-calendar-panel="upcoming" class="calendar-panel" role="tabpanel">
             ${renderScheduleEventList(upcoming, 'No upcoming performances.')}
           </div>
-          <div data-schedule-panel="prior" class="schedule-panel" hidden>
-            ${renderScheduleEventList(prior, 'No prior performances.')}
+          <div data-calendar-panel="past" class="calendar-panel" role="tabpanel" hidden>
+            ${renderScheduleEventList(past, 'No past performances.')}
           </div>
         </div>
       </div>
@@ -758,242 +787,276 @@ function renderScheduleSection(): string {
   `
 }
 
-function programmeUpcomingBannerCorner(index: number): 'left' | 'right' {
-  // Odd index: media column on the right — place banner top-left (incl. title-only blocks).
-  return programmeColumnOrders(index).titleAlign === 'text-right' ? 'left' : 'right'
-}
-
-function renderProgrammeUpcomingBanner(
-  programmePath: string,
-  count: number,
-  corner: 'left' | 'right',
-): string {
+function renderProgrammeUpcomingSubBanner(programmePath: string): string {
+  const count = eventsForProgramme(programmePath).length
   if (count <= 0) return ''
 
-const label = count === 1 ? '1 upcoming event!' : `${count} upcoming events!`
-  const positionClass =
-    corner === 'left'
-      ? 'left-3 top-2.5 text-left md:left-5 md:top-5'
-      : 'right-3 top-2.5 text-right md:right-5 md:top-5'
+  const eventsWord = count === 1 ? 'event' : 'events'
+  const label = `See ${count} ${eventsWord} upcoming!`
 
   return `
     <a
-      href="#schedule"
-      data-programme-schedule-link
+      href="#calendar"
+      data-programme-calendar-link
       data-programme-path="${programmePath}"
-      class="absolute z-10 max-w-xs cursor-pointer text-xs italic tracking-wide text-white/95 transition-colors hover:underline hover:text-white ${positionClass}"
- 
- 
+      class="programme-accordion-events-banner"
     >
       ${label}
     </a>
   `
 }
 
-function renderProgrammeTitleBlock(title: string): string {
-  return `
-    <p class="programme-media-title-label">PROGRAMME</p>
-    <h3 class="programme-media-title-heading">${title}</h3>
-  `
-}
-
-function renderProgrammeMediaHeader(
-  programmeTitle: string,
-  programmePath: string,
-  titleAlign: string,
-  bgStyle: string,
-  options: { centered?: boolean; index?: number } = {},
-): string {
-  const { centered = false, index = 0 } = options
-  const upcomingCount = eventsForProgramme(programmePath).length
-  const corner = programmeUpcomingBannerCorner(index)
-  const banner = renderProgrammeUpcomingBanner(programmePath, upcomingCount, corner)
-  const align = centered ? 'text-center' : titleAlign
-
-  return `
-    <header
-      class="programme-media-header relative shrink-0 border-b-2 border-white"
-      style="${bgStyle}"
-    >
-      ${banner}
-      <div class="${align}">
-        ${renderProgrammeTitleBlock(programmeTitle)}
-      </div>
-    </header>
-  `
-}
-
-function tabButtonClass(isActive: boolean): string {
-  return `${PROGRAMME_TAB_BASE} ${isActive ? PROGRAMME_TAB_ACTIVE : PROGRAMME_TAB_INACTIVE}`
-}
-
-function programmeTabButtonClass(tab: ProgrammeTab, active: ProgrammeTab): string {
-  return tabButtonClass(tab === active)
-}
-
-type ScheduleTab = 'upcoming' | 'prior'
+type ScheduleTab = 'upcoming' | 'past'
 
 const SCHEDULE_TAB_LABELS: Record<ScheduleTab, string> = {
   upcoming: 'UPCOMING',
-  prior: 'PRIOR',
+  past: 'PAST',
 }
 
-function scheduleTabButtonClass(tab: ScheduleTab, active: ScheduleTab): string {
-  return tabButtonClass(tab === active)
+function sectionTabButtonClass(isActive: boolean): string {
+  return `${SECTION_TAB_BASE} ${isActive ? SECTION_TAB_ACTIVE : SECTION_TAB_INACTIVE}`
 }
 
-const PROGRAMME_TAB_LABELS: Record<ProgrammeTab, string> = {
-  description: 'DESCRIPTION',
-  repertoire: 'REPERTOIRE',
+function calendarTabButtonClass(tab: ScheduleTab, active: ScheduleTab): string {
+  return sectionTabButtonClass(tab === active)
 }
 
-function renderProgrammeTabs(available: ProgrammeTab[], active: ProgrammeTab): string {
-  return available
+function programmeHasMedia(programme: Programme): boolean {
+  return getProgrammeImages(programme).length > 0
+}
+
+function renderProgrammeCarouselMedia(
+  programme: Programme,
+  options?: { frameClass?: string; carouselClass?: string; showDots?: boolean },
+): string {
+  const images = getProgrammeImages(programme)
+  if (!images.length) return ''
+
+  const frameClass = options?.frameClass ?? 'programme-media-frame relative overflow-hidden bg-sand-200'
+  const carouselClass = options?.carouselClass ?? 'programme-carousel'
+  const showDots = options?.showDots ?? true
+  const multi = images.length > 1
+  const slides = images
     .map(
-      (id) => `
-        <button
-          type="button"
-          data-programme-tab="${id}"
-          class="${programmeTabButtonClass(id, active)}"
-          role="tab"
-          aria-selected="${id === active}"
-        >
-          ${PROGRAMME_TAB_LABELS[id]}
-        </button>
+      (img, i) => `
+        <img
+          data-carousel-slide="${i}"
+          src="${assetUrl(img.image!)}"
+          alt=""
+          style="${imageObjectPosition(img)}"
+          class="programme-carousel-slide absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
+          ${i === 0 ? '' : 'hidden'}
+        />
       `,
     )
     .join('')
+
+  const controls = multi
+    ? `${renderProgrammeCarouselChevron('prev')}${renderProgrammeCarouselChevron('next')}`
+    : ''
+
+  return `
+    <div
+      class="${carouselClass}"
+      data-programme-carousel
+      data-slide-index="0"
+      data-slide-count="${images.length}"
+      tabindex="0"
+      aria-label="Programme images"
+    >
+      <div class="${frameClass}">
+        <div class="absolute inset-0">${slides}</div>
+        ${controls}
+      </div>
+      ${multi && showDots ? renderProgrammeCarouselDotsBar(images.length) : ''}
+    </div>
+  `
 }
 
-function renderProgrammeCopyColumn(programme: Programme, copyOrder: string): string {
-  const available = programmeAvailableTabs(programme)
-  const active: ProgrammeTab = 'description'
-  const showTabs = available.length > 1
-
-  const tabsMarkup = showTabs
+function renderProgrammeThumbnail(entry: ProgrammeEntry, headerColor: string): string {
+  const { programme, path } = entry
+  const title = escapeHtml(programme.title)
+  const firstImage = getProgrammeImages(programme)[0]
+  const imageMarkup = firstImage
     ? `
-        <div
-          class="${PROGRAMME_TABS_CLASS}"
-          role="tablist"
-          style="grid-template-columns: repeat(${available.length}, minmax(0, 1fr))"
-        >
-          ${renderProgrammeTabs(available, active)}
-        </div>
+        <img
+          src="${assetUrl(firstImage.image!)}"
+          alt=""
+          style="${imageObjectPosition(firstImage)}"
+          class="programme-thumb-image absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          loading="lazy"
+        />
       `
     : ''
 
-  const repertoirePanel = available.includes('repertoire')
-    ? `
-          <div data-programme-panel="repertoire" class="programme-panel" hidden>
-            ${renderProgrammeRepertoirePanel(programme.repertoire!)}
-          </div>
-        `
-    : ''
-
   return `
-    <div data-programme-copy class="min-w-0 ${copyOrder}">
-      <div data-programme-root data-active-tab="${active}">
-        ${tabsMarkup}
-        <div class="programme-panels">
-          <div data-programme-panel="description" class="programme-panel">
-            <div class="${BIOGRAPHY_PROSE}">${renderMarkdown(programme.description)}</div>
-          </div>
-          ${repertoirePanel}
-        </div>
-      </div>
-    </div>
+    <button
+      type="button"
+      data-programme-card="${escapeHtml(path)}"
+      class="programme-thumb group flex min-w-0 cursor-pointer flex-col text-left"
+      style="--programme-banner: ${headerColor}"
+    >
+      <span class="programme-thumb-media relative block aspect-square overflow-hidden bg-sand-200">
+        ${imageMarkup}
+        <span class="programme-thumb-banner">
+          <span class="programme-thumb-banner__label">PROGRAMME</span>
+          <span class="programme-thumb-banner__title">${title}</span>
+        </span>
+      </span>
+    </button>
   `
 }
 
-/** Copy 3/5, media 2/5 from sm up; single column below sm. Alternates left / right on sm+. */
-function programmeColumnOrders(index: number): { copy: string; media: string; titleAlign: string } {
-  const mediaOnRight = index % 2 === 1
-  return {
-    copy: mediaOnRight
-      ? 'order-2 sm:order-1 sm:col-span-3'
-      : 'order-2 sm:order-2 sm:col-span-3 sm:col-start-3',
-    media: mediaOnRight
-      ? 'order-1 sm:order-2 sm:col-span-2 sm:col-start-4'
-      : 'order-1 sm:order-1 sm:col-span-2',
-    titleAlign: mediaOnRight ? 'text-right' : 'text-left',
-  }
-}
-
-function renderProgrammeMedia(
-  programme: Programme,
-  index: number,
-  headerColor: string,
-  programmePath: string,
-): string {
-  const { media, titleAlign } = programmeColumnOrders(index)
-  const bgStyle = `background-color: ${headerColor}`
-  const images = getProgrammeImages(programme)
-
-  if (!images.length) {
+function renderProgrammesGallery(): string {
+  if (!programmeEntries.length) {
     return `
-      <div data-programme-media class="min-w-0 ${media}">
-        <div class="${PROGRAMME_MEDIA_STACK} programme-media-stack--title-only relative w-full" style="${bgStyle}">
-          ${renderProgrammeMediaHeader(programme.title, programmePath, titleAlign, bgStyle, {
-            centered: true,
-            index,
-          })}
-        </div>
-      </div>
+      <p class="text-center text-lg font-light leading-relaxed text-gray-600">
+        No programmes listed at the moment.
+      </p>
     `
   }
 
-  const multi = images.length > 1
+  const items = programmeEntries
+    .map((entry, index) => renderProgrammeThumbnail(entry, programmeHeaderColors[index]!))
+    .join('')
 
-  return `
-    <div data-programme-media class="min-w-0 ${media}">
-      <div
-        class="programme-media-group"
-        data-programme-carousel
-        data-slide-index="0"
-        data-slide-count="${images.length}"
-      >
-        <div class="${PROGRAMME_MEDIA_STACK_WITH_IMAGE}">
-          ${renderProgrammeMediaHeader(programme.title, programmePath, titleAlign, bgStyle, {
-            index,
-          })}
-          ${renderProgrammeCarouselFrame(images)}
-        </div>
-        ${multi ? renderProgrammeCarouselDotsBar(images.length) : ''}
-      </div>
-    </div>
-  `
+  return renderMediaStrip(items, 1, 'media-strip--programmes')
 }
 
-function renderProgramme(entry: ProgrammeEntry, index: number, headerColor: string): string {
-  const { programme, path } = entry
-  const { copy } = programmeColumnOrders(index)
-  const divider = index > 0 ? 'border-t border-sand-300/60 pt-12' : ''
-
+function renderProgrammeDetailShell(): string {
   return `
-    <article class="${divider}">
-      <div class="${PROGRAMME_LAYOUT}">
-        ${renderProgrammeCopyColumn(programme, copy)}
-        ${renderProgrammeMedia(programme, index, headerColor, path)}
+    <div
+      data-programme-detail
+      class="programme-detail fixed inset-0 z-[60] overflow-y-auto bg-sand-100"
+      hidden
+    >
+      ${renderMediaCloseButton('data-programme-close', 'Close programme')}
+      <div class="mx-auto flex min-h-full max-w-7xl flex-col justify-center px-6 py-24 md:py-32">
+        <div class="${LISTEN_DETAIL_LAYOUT}">
+          <div data-programme-detail-media class="programme-detail-media min-w-0"></div>
+          <div class="min-w-0">
+            <p class="mb-2 text-xs font-normal tracking-[0.25em] text-sand-700">PROGRAMME</p>
+            <h3 data-programme-detail-title class="mb-6 text-2xl font-light leading-tight tracking-wide text-gray-900 md:text-3xl"></h3>
+            <div data-programme-detail-upcoming class="mb-6"></div>
+            <div data-programme-detail-description class="${PROGRAMME_DESCRIPTION_PROSE}"></div>
+            <div data-programme-detail-repertoire class="mt-8"></div>
+          </div>
+        </div>
       </div>
-    </article>
+    </div>
   `
 }
 
 function renderProgrammesSection(): string {
   if (!programmeEntries.length) return ''
 
-  const headerColors = assignProgrammeHeaderColors(programmeEntries)
-
   return `
     <section id="programmes" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
         <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">PROGRAMMES</h2>
-        <div class="${SECTION_CONTENT_STACK}">
-          ${programmeEntries.map((entry, index) => renderProgramme(entry, index, headerColors[index]!)).join('')}
+        <div data-programmes-gallery-root>
+          ${renderProgrammesGallery()}
         </div>
       </div>
+      ${renderProgrammeDetailShell()}
     </section>
   `
+}
+
+function programmeEntryByPath(path: string): ProgrammeEntry | undefined {
+  return programmeEntries.find((entry) => entry.path === path)
+}
+
+function programmeHeaderColorForEntry(entry: ProgrammeEntry): string {
+  const index = programmeEntries.indexOf(entry)
+  if (index < 0) return PROGRAMME_HEADER_PALETTE[0]
+  return programmeHeaderColors[index]!
+}
+
+function populateProgrammeDetail(entry: ProgrammeEntry): void {
+  const detail = document.querySelector<HTMLElement>('[data-programme-detail]')
+  const mediaEl = document.querySelector<HTMLElement>('[data-programme-detail-media]')
+  const titleEl = document.querySelector<HTMLElement>('[data-programme-detail-title]')
+  const upcomingEl = document.querySelector<HTMLElement>('[data-programme-detail-upcoming]')
+  const descriptionEl = document.querySelector<HTMLElement>('[data-programme-detail-description]')
+  const repertoireEl = document.querySelector<HTMLElement>('[data-programme-detail-repertoire]')
+  if (!detail || !mediaEl || !titleEl || !upcomingEl || !descriptionEl || !repertoireEl) return
+
+  const { programme, path } = entry
+  const headerColor = programmeHeaderColorForEntry(entry)
+  detail.style.setProperty('--programme-banner', headerColor)
+
+  const mediaMarkup = programmeHasMedia(programme)
+    ? renderProgrammeCarouselMedia(programme, {
+        frameClass: 'programme-detail-media__frame programme-media-frame relative overflow-hidden bg-sand-200',
+        carouselClass: 'programme-detail-media__carousel',
+        showDots: true,
+      })
+    : `<div class="programme-detail-media__frame programme-detail-media__frame--empty bg-sand-200" aria-hidden="true"></div>`
+
+  mediaEl.innerHTML = mediaMarkup
+  mediaEl.querySelectorAll<HTMLElement>('[data-programme-carousel]').forEach((carousel) => {
+    bindProgrammeCarousel(carousel, { autoplay: true })
+  })
+
+  titleEl.textContent = programme.title.trim()
+  upcomingEl.innerHTML = renderProgrammeUpcomingSubBanner(path)
+  descriptionEl.innerHTML = renderMarkdown(programme.description)
+
+  const repertoireIndex = programmeEntries.indexOf(entry)
+  repertoireEl.innerHTML = programme.repertoire?.length
+    ? renderProgrammeRepertoireSection(
+        programme.repertoire,
+        `programme-detail-repertoire-${repertoireIndex}`,
+      )
+    : ''
+}
+
+function clearProgrammeDetail(): void {
+  stopProgrammeDetailAutoplay()
+  const detail = document.querySelector<HTMLElement>('[data-programme-detail]')
+  const mediaEl = document.querySelector<HTMLElement>('[data-programme-detail-media]')
+  const titleEl = document.querySelector<HTMLElement>('[data-programme-detail-title]')
+  const upcomingEl = document.querySelector<HTMLElement>('[data-programme-detail-upcoming]')
+  const descriptionEl = document.querySelector<HTMLElement>('[data-programme-detail-description]')
+  const repertoireEl = document.querySelector<HTMLElement>('[data-programme-detail-repertoire]')
+  detail?.style.removeProperty('--programme-banner')
+  if (mediaEl) mediaEl.innerHTML = ''
+  if (titleEl) titleEl.textContent = ''
+  if (upcomingEl) upcomingEl.innerHTML = ''
+  if (descriptionEl) descriptionEl.innerHTML = ''
+  if (repertoireEl) repertoireEl.innerHTML = ''
+}
+
+function openProgramme(path: string): void {
+  const entry = programmeEntryByPath(path)
+  if (!entry) return
+
+  programmeSelectedPath = path
+  populateProgrammeDetail(entry)
+
+  const gallery = document.querySelector<HTMLElement>('[data-programmes-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-programme-detail]')
+  gallery?.setAttribute('hidden', '')
+  detail?.removeAttribute('hidden')
+  setMediaOverlayOpen(true)
+}
+
+function closeProgramme(): void {
+  if (!programmeSelectedPath) return
+
+  programmeSelectedPath = null
+  clearProgrammeDetail()
+
+  const gallery = document.querySelector<HTMLElement>('[data-programmes-gallery-root]')
+  const detail = document.querySelector<HTMLElement>('[data-programme-detail]')
+  gallery?.removeAttribute('hidden')
+  detail?.setAttribute('hidden', '')
+  setMediaOverlayOpen(false)
+
+  const section = document.getElementById('programmes')
+  if (section) scrollBelowSiteHeader(section, false)
 }
 
 function renderMosaic(): string {
@@ -1079,6 +1142,43 @@ function renderListenThumbnail(entry: VideoEntry): string {
   `
 }
 
+function renderMediaStripChevron(direction: 'prev' | 'next'): string {
+  const isPrev = direction === 'prev'
+  const control = isPrev ? 'data-media-strip-prev' : 'data-media-strip-next'
+  const label = isPrev ? 'Scroll left' : 'Scroll right'
+  const path = isPrev ? 'M14 6 L8 12 L14 18' : 'M10 6 L16 12 L10 18'
+
+  return `
+    <button
+      type="button"
+      ${control}
+      aria-label="${label}"
+      class="media-strip__nav media-strip__nav--${direction}"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="${path}" />
+      </svg>
+    </button>
+  `
+}
+
+function renderMediaStrip(itemsMarkup: string, rows: 1 | 2 = 2, modifierClass = ''): string {
+  const rowClass = rows === 1 ? 'media-strip--1-row' : 'media-strip--2-rows'
+  const extraClass = modifierClass ? ` ${modifierClass}` : ''
+
+  return `
+    <div class="media-strip ${rowClass}${extraClass}" data-media-strip>
+      <div class="media-strip__viewport" data-media-strip-viewport tabindex="0">
+        <div class="media-strip__grid">
+          ${itemsMarkup}
+        </div>
+      </div>
+      ${renderMediaStripChevron('prev')}
+      ${renderMediaStripChevron('next')}
+    </div>
+  `
+}
+
 function renderListenGallery(): string {
   const items = videoEntries.map((entry) => renderListenThumbnail(entry)).filter(Boolean)
 
@@ -1090,7 +1190,7 @@ function renderListenGallery(): string {
     `
   }
 
-  return `<div class="listen-gallery">${items.join('')}</div>`
+  return renderMediaStrip(items.join(''), 1)
 }
 
 function renderListenDetailShell(): string {
@@ -1201,7 +1301,7 @@ function renderPictureThumbnail(entry: PhotoEntry): string {
   const caption = photo.caption
 
   const captionMarkup = caption
-    ? `<p class="mt-4 text-sm font-light tracking-wide text-gray-500">${escapeHtml(caption)}</p>`
+    ? `<p class="mt-2 text-xs font-light leading-snug tracking-wide text-gray-500">${escapeHtml(caption)}</p>`
     : ''
 
   return `
@@ -1210,11 +1310,11 @@ function renderPictureThumbnail(entry: PhotoEntry): string {
       data-pictures-photo="${id}"
       class="pictures-thumb group flex min-w-0 cursor-pointer flex-col text-left"
     >
-      <span class="block overflow-hidden bg-sand-200">
+      <span class="pictures-thumb-media block overflow-hidden bg-sand-200">
         <img
           src="${assetUrl(photo.image)}"
           alt="${caption ? escapeHtml(caption) : ''}"
-          class="pictures-thumb-image w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+          class="pictures-thumb-image h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
           loading="lazy"
         />
       </span>
@@ -1223,24 +1323,52 @@ function renderPictureThumbnail(entry: PhotoEntry): string {
   `
 }
 
-function renderPicturesCategory(category: PhotoCategory): string {
-  const items = photoEntries.filter((entry) => entry.category === category)
-  if (!items.length) return ''
+function picturesTabButtonClass(category: PhotoCategory, active: PhotoCategory): string {
+  return sectionTabButtonClass(category === active)
+}
+
+function renderPicturesTabs(active: PhotoCategory): string {
+  const tabs = PHOTO_CATEGORIES.map(
+    (id) => `
+      <button
+        type="button"
+        data-pictures-tab="${id}"
+        class="${picturesTabButtonClass(id, active)}"
+        role="tab"
+        aria-selected="${id === active}"
+      >
+        ${PHOTO_CATEGORY_LABELS[id]}
+      </button>
+    `,
+  ).join('<span class="section-tabs__sep" aria-hidden="true">|</span>')
 
   return `
-    <div class="pictures-category">
-      <h3 class="mb-10 text-center text-sm font-normal tracking-[0.25em] text-sand-800">${PHOTO_CATEGORY_LABELS[category]}</h3>
-      <div class="pictures-grid">
-        ${items.map((entry) => renderPictureThumbnail(entry)).join('')}
-      </div>
+    <div class="section-tabs" role="tablist">
+      ${tabs}
+    </div>
+  `
+}
+
+function renderPicturesPanel(category: PhotoCategory, active: PhotoCategory): string {
+  const items = photoEntries.filter((entry) => entry.category === category)
+  const content = items.length
+    ? renderMediaStrip(items.map((entry) => renderPictureThumbnail(entry)).join(''))
+    : `<p class="py-8 text-center text-base font-light text-gray-500">No photos in this category.</p>`
+
+  return `
+    <div
+      data-pictures-panel="${category}"
+      class="pictures-panel"
+      role="tabpanel"
+      ${category === active ? '' : 'hidden'}
+    >
+      ${content}
     </div>
   `
 }
 
 function renderPicturesGallery(): string {
-  const blocks = PHOTO_CATEGORIES.map((category) => renderPicturesCategory(category)).filter(Boolean)
-
-  if (!blocks.length) {
+  if (!photoEntries.length) {
     return `
       <p class="text-center text-lg font-light leading-relaxed text-gray-600">
         No photos listed at the moment.
@@ -1248,7 +1376,17 @@ function renderPicturesGallery(): string {
     `
   }
 
-  return `<div class="${PICTURES_CONTENT_STACK}">${blocks.join('')}</div>`
+  const active: PhotoCategory = 'portraits'
+
+  return `
+    <div data-pictures-root data-active-tab="${active}">
+      <div class="section-intro">
+        <h2 class="section-intro__title text-center ${SECTION_TITLE_BASE}">PICTURES</h2>
+        ${renderPicturesTabs(active)}
+      </div>
+      ${PHOTO_CATEGORIES.map((category) => renderPicturesPanel(category, active)).join('')}
+    </div>
+  `
 }
 
 function renderPicturesDetailShell(): string {
@@ -1275,10 +1413,16 @@ function renderPicturesDetailShell(): string {
 }
 
 function renderPicturesSection(): string {
+  const hasPhotos = photoEntries.length > 0
+
   return `
     <section id="pictures" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">PICTURES</h2>
+        ${
+          hasPhotos
+            ? ''
+            : `<h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">PICTURES</h2>`
+        }
         <div data-pictures-gallery-root>
           ${renderPicturesGallery()}
         </div>
@@ -1352,6 +1496,11 @@ function onMediaOverlayEscape(event: KeyboardEvent): void {
     closeListenVideo()
     return
   }
+  if (programmeSelectedPath) {
+    event.preventDefault()
+    closeProgramme()
+    return
+  }
   if (picturesSelectedPhotoId) {
     event.preventDefault()
     closePicture()
@@ -1372,6 +1521,42 @@ function bindListenSection(): void {
   })
 }
 
+function updateMediaStripNav(strip: HTMLElement): void {
+  const viewport = strip.querySelector<HTMLElement>('[data-media-strip-viewport]')
+  const prev = strip.querySelector<HTMLButtonElement>('[data-media-strip-prev]')
+  const next = strip.querySelector<HTMLButtonElement>('[data-media-strip-next]')
+  if (!viewport || !prev || !next) return
+
+  const maxScroll = viewport.scrollWidth - viewport.clientWidth
+  const overflow = maxScroll > 1
+  prev.disabled = viewport.scrollLeft <= 1
+  next.disabled = viewport.scrollLeft >= maxScroll - 1
+  prev.hidden = !overflow
+  next.hidden = !overflow
+}
+
+function applyPicturesTab(root: HTMLElement, tab: PhotoCategory): void {
+  root.dataset.activeTab = tab
+
+  root.querySelectorAll<HTMLButtonElement>('[data-pictures-tab]').forEach((button) => {
+    const id = button.dataset.picturesTab as PhotoCategory | undefined
+    if (!id) return
+    button.className = picturesTabButtonClass(id, tab)
+    button.setAttribute('aria-selected', String(id === tab))
+  })
+
+  root.querySelectorAll<HTMLElement>('[data-pictures-panel]').forEach((panel) => {
+    const id = panel.dataset.picturesPanel as PhotoCategory | undefined
+    if (id === tab) panel.removeAttribute('hidden')
+    else panel.setAttribute('hidden', '')
+  })
+
+  const strip = root.querySelector<HTMLElement>(`[data-pictures-panel="${tab}"] [data-media-strip]`)
+  const viewport = strip?.querySelector<HTMLElement>('[data-media-strip-viewport]')
+  if (viewport) viewport.scrollLeft = 0
+  if (strip) updateMediaStripNav(strip)
+}
+
 function bindPicturesSection(): void {
   document.querySelectorAll<HTMLButtonElement>('[data-pictures-photo]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -1384,10 +1569,45 @@ function bindPicturesSection(): void {
   document.querySelector<HTMLButtonElement>('[data-pictures-close]')?.addEventListener('click', () => {
     closePicture()
   })
+
+  document.querySelectorAll<HTMLElement>('[data-pictures-root]').forEach((root) => {
+    root.querySelectorAll<HTMLButtonElement>('[data-pictures-tab]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const tab = button.dataset.picturesTab as PhotoCategory | undefined
+        if (!tab || root.dataset.activeTab === tab) return
+        applyPicturesTab(root, tab)
+      })
+    })
+  })
+}
+
+function bindMediaStrips(): void {
+  document.querySelectorAll<HTMLElement>('[data-media-strip]').forEach((strip) => {
+    const viewport = strip.querySelector<HTMLElement>('[data-media-strip-viewport]')
+    const prev = strip.querySelector<HTMLButtonElement>('[data-media-strip-prev]')
+    const next = strip.querySelector<HTMLButtonElement>('[data-media-strip-next]')
+    if (!viewport || !prev || !next) return
+
+    const updateNav = (): void => updateMediaStripNav(strip)
+
+    const scrollPage = (direction: -1 | 1): void => {
+      viewport.scrollBy({ left: direction * viewport.clientWidth * 0.9, behavior: 'smooth' })
+    }
+
+    prev.addEventListener('click', () => scrollPage(-1))
+    next.addEventListener('click', () => scrollPage(1))
+    viewport.addEventListener('scroll', updateNav, { passive: true })
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(updateNav).observe(viewport)
+    } else {
+      window.addEventListener('resize', updateNav)
+    }
+    updateNav()
+  })
 }
 
 const CONTACT_LINK_CLASS =
-  'text-sand-800 underline decoration-sand-300 underline-offset-4 transition-colors hover:text-gray-900'
+  'underline underline-offset-4 transition-colors'
 
 function telHref(phone: string): string {
   const normalized = phone.trim().replace(/[^\d+]/g, '')
@@ -1427,7 +1647,7 @@ function renderContactSocialLinks(): string {
 
   if (!links.length) return ''
 
-  return `<div class="mt-10 flex flex-wrap justify-center gap-3 lg:justify-start">${links.join('')}</div>`
+  return `<div class="contact-section__social">${links.join('')}</div>`
 }
 
 function renderContactEmailLink(email: string | undefined): string {
@@ -1451,29 +1671,28 @@ function renderContactSection(): string {
   const agencyLines = [agencyEmail, agencyPhone].filter(Boolean).join('<br />')
 
   return `
-    <section id="contact" class="bg-sand-100 px-6 ${SECTION_PADDING_Y}">
-      <div class="mx-auto max-w-7xl">
-        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">CONTACT</h2>
-        <div class="contact-layout mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,16rem)_1fr] lg:items-start lg:gap-16">
-          <div class="flex justify-center lg:justify-start">
-            <img
-              src="${assetUrl(AGENCY_LOGO_SRC)}"
-              alt="Eliasson Artists Stockholm"
-              class="contact-agency-logo w-full max-w-[16rem] object-contain"
-              loading="lazy"
-            />
+    <section id="contact" class="contact-section" aria-labelledby="contact-heading">
+      <img
+        src="${assetUrl(CONTACT_IMAGE_SRC)}"
+        alt=""
+        class="contact-section__image"
+        loading="lazy"
+        decoding="async"
+      />
+      <div class="contact-section__panel">
+        <div class="contact-section__card">
+          <h2 id="contact-heading" class="contact-section__title">CONTACT</h2>
+          <p class="contact-section__intro">Lovisa Huledal is represented by</p>
+          <div class="contact-section__block">
+            <p class="contact-section__label">ELIASSON ARTISTS STOCKHOLM</p>
+            <p class="contact-section__person">${escapeHtml(agencyName)}</p>
+            ${agencyLines ? `<p class="contact-section__details">${agencyLines}</p>` : ''}
           </div>
-          <div class="min-w-0 text-center text-lg font-light leading-relaxed text-gray-600 lg:text-left">
-            <p>
-              Lovisa Huledal is represented by
-              <span class="text-gray-900">${escapeHtml(agencyName)}</span>
-              at Eliasson Artists Stockholm:
-            </p>
-            ${agencyLines ? `<p class="mt-4">${agencyLines}</p>` : ''}
-            <p class="mt-8">
+          <div class="contact-section__block">
+            <p class="contact-section__intro">
               If you wish to come in contact with Lovisa herself, please use the information below:
             </p>
-            ${lovisaEmail ? `<p class="mt-4">${lovisaEmail}</p>` : ''}
+            ${lovisaEmail ? `<p class="contact-section__details">${lovisaEmail}</p>` : ''}
             ${renderContactSocialLinks()}
           </div>
         </div>
@@ -1535,22 +1754,31 @@ function updateAboutBiography(): void {
   bindAboutSection()
 }
 
-function applyProgrammeTab(root: HTMLElement, tab: ProgrammeTab): void {
-  root.dataset.activeTab = tab
+function stopProgrammeDetailAutoplay(): void {
+  if (programmeDetailAutoplayTimer !== null) {
+    clearInterval(programmeDetailAutoplayTimer)
+    programmeDetailAutoplayTimer = null
+  }
+  programmeDetailAutoplayCarousel = null
+}
 
-  root.querySelectorAll<HTMLButtonElement>('[data-programme-tab]').forEach((button) => {
-    const id = button.dataset.programmeTab as ProgrammeTab | undefined
-    if (!id) return
-    button.className = programmeTabButtonClass(id, tab)
-    button.setAttribute('aria-selected', String(id === tab))
-  })
+function startProgrammeDetailAutoplay(carousel: HTMLElement): void {
+  stopProgrammeDetailAutoplay()
 
-  root.querySelectorAll<HTMLElement>('[data-programme-panel]').forEach((panel) => {
-    const id = panel.dataset.programmePanel as ProgrammeTab | undefined
-    if (id === tab) panel.removeAttribute('hidden')
-    else panel.setAttribute('hidden', '')
-  })
+  const count = Number(carousel.dataset.slideCount ?? 0)
+  if (count <= 1) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
+  programmeDetailAutoplayCarousel = carousel
+  programmeDetailAutoplayTimer = setInterval(() => {
+    const current = Number(carousel.dataset.slideIndex ?? 0)
+    showProgrammeCarouselSlide(carousel, current + 1)
+  }, PROGRAMME_DETAIL_AUTOPLAY_MS)
+}
+
+function resetProgrammeDetailAutoplay(carousel: HTMLElement): void {
+  if (programmeDetailAutoplayCarousel !== carousel) return
+  startProgrammeDetailAutoplay(carousel)
 }
 
 function showProgrammeCarouselSlide(carousel: HTMLElement, index: number): void {
@@ -1561,71 +1789,112 @@ function showProgrammeCarouselSlide(carousel: HTMLElement, index: number): void 
   const next = ((index % count) + count) % count
 
   carousel.dataset.slideIndex = String(next)
+  const useFade = carousel.classList.contains('programme-detail-media__carousel')
   slides.forEach((slide, i) => {
-    if (i === next) slide.removeAttribute('hidden')
+    const active = i === next
+    if (useFade) {
+      slide.style.opacity = active ? '1' : '0'
+      slide.style.zIndex = active ? '1' : '0'
+      slide.removeAttribute('hidden')
+    } else if (active) slide.removeAttribute('hidden')
     else slide.setAttribute('hidden', '')
   })
 
   carousel.querySelectorAll<HTMLButtonElement>('[data-carousel-dot]').forEach((dot) => {
     const i = Number(dot.dataset.carouselDot)
     const active = i === next
-    const marker = dot.querySelector<HTMLElement>('[data-carousel-dot-marker]')
     dot.setAttribute('aria-current', String(active))
-    if (marker) {
-      marker.classList.toggle('bg-gray-900', active)
-      marker.classList.toggle('bg-gray-400/55', !active)
+  })
+}
+
+function bindProgrammeCarousel(carousel: HTMLElement, options?: { autoplay?: boolean }): void {
+  const count = Number(carousel.dataset.slideCount ?? 0)
+  const autoplay = options?.autoplay ?? false
+
+  const step = (delta: number, fromUser = false) => {
+    if (count <= 1) return
+    const current = Number(carousel.dataset.slideIndex ?? 0)
+    showProgrammeCarouselSlide(carousel, current + delta)
+    if (fromUser && autoplay) resetProgrammeDetailAutoplay(carousel)
+  }
+
+  carousel.querySelector<HTMLButtonElement>('[data-carousel-prev]')?.addEventListener('click', () => {
+    step(-1, true)
+  })
+
+  carousel.querySelector<HTMLButtonElement>('[data-carousel-next]')?.addEventListener('click', () => {
+    step(1, true)
+  })
+
+  carousel.querySelectorAll<HTMLButtonElement>('[data-carousel-dot]').forEach((dot) => {
+    dot.addEventListener('click', () => {
+      const index = Number(dot.dataset.carouselDot)
+      if (!Number.isNaN(index)) {
+        showProgrammeCarouselSlide(carousel, index)
+        if (autoplay) resetProgrammeDetailAutoplay(carousel)
+      }
+    })
+  })
+
+  showProgrammeCarouselSlide(carousel, Number(carousel.dataset.slideIndex ?? 0))
+
+  if (count <= 1) return
+
+  carousel.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      step(-1, true)
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      step(1, true)
     }
+  })
+
+  if (!autoplay) return
+
+  startProgrammeDetailAutoplay(carousel)
+
+  carousel.addEventListener('mouseenter', stopProgrammeDetailAutoplay)
+  carousel.addEventListener('mouseleave', () => startProgrammeDetailAutoplay(carousel))
+  carousel.addEventListener('focusin', stopProgrammeDetailAutoplay)
+  carousel.addEventListener('focusout', (event) => {
+    const next = event.relatedTarget
+    if (!next || !carousel.contains(next as Node)) startProgrammeDetailAutoplay(carousel)
   })
 }
 
 function bindProgrammeCarousels(): void {
   document.querySelectorAll<HTMLElement>('[data-programme-carousel]').forEach((carousel) => {
-    const count = Number(carousel.dataset.slideCount ?? 0)
-    if (count <= 1) return
-
-    carousel.querySelector<HTMLButtonElement>('[data-carousel-prev]')?.addEventListener('click', () => {
-      const current = Number(carousel.dataset.slideIndex ?? 0)
-      showProgrammeCarouselSlide(carousel, current - 1)
-    })
-
-    carousel.querySelector<HTMLButtonElement>('[data-carousel-next]')?.addEventListener('click', () => {
-      const current = Number(carousel.dataset.slideIndex ?? 0)
-      showProgrammeCarouselSlide(carousel, current + 1)
-    })
-
-    carousel.querySelectorAll<HTMLButtonElement>('[data-carousel-dot]').forEach((dot) => {
-      dot.addEventListener('click', () => {
-        const index = Number(dot.dataset.carouselDot)
-        if (!Number.isNaN(index)) showProgrammeCarouselSlide(carousel, index)
-      })
-    })
+    bindProgrammeCarousel(carousel)
   })
 }
 
-function bindProgrammeTabs(): void {
-  document.querySelectorAll<HTMLElement>('[data-programme-root]').forEach((root) => {
-    root.querySelectorAll<HTMLButtonElement>('[data-programme-tab]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const tab = button.dataset.programmeTab as ProgrammeTab | undefined
-        if (!tab || root.dataset.activeTab === tab) return
-        applyProgrammeTab(root, tab)
-      })
+function bindProgrammesSection(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-programme-card]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const path = button.dataset.programmeCard
+      if (!path) return
+      openProgramme(path)
     })
+  })
+
+  document.querySelector<HTMLButtonElement>('[data-programme-close]')?.addEventListener('click', () => {
+    closeProgramme()
   })
 }
 
 function clearScheduleHighlights(): void {
-  document.querySelectorAll('.schedule-event--highlight').forEach((el) => {
-    el.classList.remove('schedule-event--highlight')
+  document.querySelectorAll('.calendar-event--highlight').forEach((el) => {
+    el.classList.remove('calendar-event--highlight')
   })
 }
 
 function highlightScheduleEventsForProgramme(programmePath: string): void {
   clearScheduleHighlights()
   const rows = document.querySelectorAll<HTMLElement>(
-    `[data-schedule-event][data-programme-path="${programmePath}"]`,
+    `[data-calendar-event][data-programme-path="${programmePath}"]`,
   )
-  rows.forEach((row) => row.classList.add('schedule-event--highlight'))
+  rows.forEach((row) => row.classList.add('calendar-event--highlight'))
   if (rows.length) {
     window.setTimeout(clearScheduleHighlights, SCHEDULE_HIGHLIGHT_MS)
   }
@@ -1649,35 +1918,35 @@ function scrollBelowSiteHeader(element: HTMLElement, smooth: boolean): void {
 function applyScheduleTab(root: HTMLElement, tab: ScheduleTab): void {
   root.dataset.activeTab = tab
 
-  root.querySelectorAll<HTMLButtonElement>('[data-schedule-tab]').forEach((button) => {
-    const id = button.dataset.scheduleTab as ScheduleTab | undefined
+  root.querySelectorAll<HTMLButtonElement>('[data-calendar-tab]').forEach((button) => {
+    const id = button.dataset.calendarTab as ScheduleTab | undefined
     if (!id) return
-    button.className = scheduleTabButtonClass(id, tab)
+    button.className = calendarTabButtonClass(id, tab)
     button.setAttribute('aria-selected', String(id === tab))
   })
 
-  root.querySelectorAll<HTMLElement>('[data-schedule-panel]').forEach((panel) => {
-    const id = panel.dataset.schedulePanel as ScheduleTab | undefined
+  root.querySelectorAll<HTMLElement>('[data-calendar-panel]').forEach((panel) => {
+    const id = panel.dataset.calendarPanel as ScheduleTab | undefined
     if (id === tab) panel.removeAttribute('hidden')
     else panel.setAttribute('hidden', '')
   })
 }
 
 function showScheduleTabForEvent(eventId: string): void {
-  const row = document.getElementById(scheduleEventDomId(eventId))
-  const root = document.querySelector<HTMLElement>('[data-schedule-root]')
+  const row = document.getElementById(calendarEventDomId(eventId))
+  const root = document.querySelector<HTMLElement>('[data-calendar-root]')
   if (!row || !root) return
 
-  const panel = row.closest<HTMLElement>('[data-schedule-panel]')
-  const tab = panel?.dataset.schedulePanel as ScheduleTab | undefined
+  const panel = row.closest<HTMLElement>('[data-calendar-panel]')
+  const tab = panel?.dataset.calendarPanel as ScheduleTab | undefined
   if (tab) applyScheduleTab(root, tab)
 }
 
 function navigateToProgrammeSchedule(programmePath: string): void {
-  const schedule = document.getElementById('schedule')
-  if (!schedule) return
+  const calendar = document.getElementById('calendar')
+  if (!calendar) return
 
-  const root = document.querySelector<HTMLElement>('[data-schedule-root]')
+  const root = document.querySelector<HTMLElement>('[data-calendar-root]')
   if (root) applyScheduleTab(root, 'upcoming')
 
   const programmeEvents = eventsForProgramme(programmePath)
@@ -1685,8 +1954,8 @@ function navigateToProgrammeSchedule(programmePath: string): void {
   const smooth = !reducedMotion
 
   const firstId = programmeEvents[0]?.id
-  const firstRow = firstId ? document.getElementById(scheduleEventDomId(firstId)) : null
-  const target = firstRow ?? schedule
+  const firstRow = firstId ? document.getElementById(calendarEventDomId(firstId)) : null
+  const target = firstRow ?? calendar
 
   scrollBelowSiteHeader(target, smooth)
 
@@ -1695,10 +1964,10 @@ function navigateToProgrammeSchedule(programmePath: string): void {
 }
 
 function bindScheduleTabs(): void {
-  document.querySelectorAll<HTMLElement>('[data-schedule-root]').forEach((root) => {
-    root.querySelectorAll<HTMLButtonElement>('[data-schedule-tab]').forEach((button) => {
+  document.querySelectorAll<HTMLElement>('[data-calendar-root]').forEach((root) => {
+    root.querySelectorAll<HTMLButtonElement>('[data-calendar-tab]').forEach((button) => {
       button.addEventListener('click', () => {
-        const tab = button.dataset.scheduleTab as ScheduleTab | undefined
+        const tab = button.dataset.calendarTab as ScheduleTab | undefined
         if (!tab || root.dataset.activeTab === tab) return
         applyScheduleTab(root, tab)
       })
@@ -1707,22 +1976,23 @@ function bindScheduleTabs(): void {
 }
 
 function bindScheduleNavigation(): void {
-  document.querySelectorAll<HTMLAnchorElement>('[data-programme-schedule-link]').forEach((link) => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault()
-      const programmePath = link.dataset.programmePath
-      if (!programmePath) return
-      navigateToProgrammeSchedule(programmePath)
-    })
+  document.addEventListener('click', (event) => {
+    const link = (event.target as Element).closest<HTMLAnchorElement>('[data-programme-calendar-link]')
+    if (!link) return
+    event.preventDefault()
+    const programmePath = link.dataset.programmePath
+    if (!programmePath) return
+    if (programmeSelectedPath) closeProgramme()
+    navigateToProgrammeSchedule(programmePath)
   })
 
   const hash = window.location.hash.slice(1)
-  if (!hash.startsWith('schedule')) return
+  if (!hash.startsWith('calendar')) return
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  if (hash === 'schedule') {
-    const section = document.getElementById('schedule')
+  if (hash === 'calendar') {
+    const section = document.getElementById('calendar')
     if (section) scrollBelowSiteHeader(section, !reducedMotion)
     return
   }
@@ -1771,41 +2041,36 @@ function bindAboutSection(): void {
 
 function renderApp(): void {
   document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-    <header data-site-header class="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-sm transition-all duration-300 border-b border-white/10">
-      <div class="mx-auto flex max-w-7xl flex-col items-center px-6 py-4 md:flex-row md:justify-between md:py-6">
-        <a href="#" class="text-center text-xl tracking-[0.2em] font-light text-white transition-colors hover:text-sand-200 sm:text-2xl">
-          LOVISA HULEDAL
-        </a>
-        <nav class="site-nav mt-3 flex w-full flex-col items-center gap-3 text-xs tracking-wide text-gray-200 sm:text-sm md:mt-0 md:w-auto md:flex-row md:justify-end md:gap-8 md:tracking-widest">
-          <div class="site-nav-row flex justify-center gap-6 md:contents">
-            <a href="#about" class="hover:text-white transition-colors">ABOUT</a>
-            <a href="#programmes" class="hover:text-white transition-colors">PROGRAMMES</a>
-            <a href="#schedule" class="hover:text-white transition-colors">SCHEDULE</a>
-          </div>
-          <div class="site-nav-row flex justify-center gap-6 md:contents">
-            <a href="#listen" class="hover:text-white transition-colors">LISTEN</a>
-            <a href="#pictures" class="hover:text-white transition-colors">PICTURES</a>
-            <a href="#contact" class="hover:text-white transition-colors">CONTACT</a>
-          </div>
-        </nav>
-      </div>
-    </header>
-
     <main>
       <section id="home" class="relative h-screen w-full hero-image md:mb-5">
-        <div class="absolute inset-0 bg-black/20"></div>
-        ${renderHeroTitle()}
+        ${renderHeroHeadings()}
+        <footer data-site-header class="site-header" aria-label="Site navigation">
+          <div class="site-header__inner">
+            <nav class="site-nav">
+              <div class="site-nav-row">
+                <a href="#about" class="site-nav-link">ABOUT</a>
+                <a href="#programmes" class="site-nav-link">PROGRAMMES</a>
+                <a href="#calendar" class="site-nav-link">CALENDAR</a>
+              </div>
+              <div class="site-nav-row">
+                <a href="#listen" class="site-nav-link">LISTEN</a>
+                <a href="#pictures" class="site-nav-link">PICTURES</a>
+                <a href="#contact" class="site-nav-link">CONTACT</a>
+              </div>
+            </nav>
+          </div>
+        </footer>
       </section>
 
       ${renderAboutSection()}
-
-      ${renderProgrammesSection()}
 
       ${renderScheduleSection()}
 
       ${renderListenSection()}
 
       ${renderPicturesSection()}
+
+      ${renderProgrammesSection()}
 
       ${renderContactSection()}
     </main>
@@ -1815,23 +2080,49 @@ function renderApp(): void {
 function syncSiteHeaderHeight(): void {
   const header = document.querySelector<HTMLElement>('[data-site-header]')
   if (!header) return
-  document.documentElement.style.setProperty('--site-header-height', `${header.offsetHeight}px`)
+  const stuck = header.classList.contains('site-header--stuck')
+  const height = stuck ? header.offsetHeight : 0
+  document.documentElement.style.setProperty('--site-header-height', `${height}px`)
 }
 
 function bindSiteHeader(): void {
   const header = document.querySelector<HTMLElement>('[data-site-header]')
-  if (!header) return
+  const hero = document.getElementById('home')
+  if (!header || !hero) return
 
-  const update = () => syncSiteHeaderHeight()
-  update()
-  window.addEventListener('resize', update)
+  const footerStickScrollY = () =>
+    hero.offsetTop + hero.offsetHeight - header.offsetHeight
+
+  const syncStuck = () => {
+    const stuck = window.scrollY >= footerStickScrollY()
+    header.classList.toggle('site-header--stuck', stuck)
+    header.toggleAttribute('data-stuck', stuck)
+    syncSiteHeaderHeight()
+  }
+
+  let scrollScheduled = false
+  const onScroll = () => {
+    if (scrollScheduled) return
+    scrollScheduled = true
+    requestAnimationFrame(() => {
+      syncStuck()
+      scrollScheduled = false
+    })
+  }
+
+  const onResize = () => syncStuck()
+
+  syncStuck()
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onResize)
 
   if (typeof ResizeObserver !== 'undefined') {
-    new ResizeObserver(update).observe(header)
+    new ResizeObserver(onResize).observe(header)
   }
 }
 
 syncHeroBackground()
+syncSiteFonts(content.typography)
 syncSiteIcon({
   siteIcon: content.siteIcon,
   heroImage: content.heroImage?.image,
@@ -1841,10 +2132,11 @@ syncSiteIcon({
 renderApp()
 bindSiteHeader()
 bindAboutSection()
-bindProgrammeTabs()
 bindProgrammeCarousels()
+bindProgrammesSection()
 bindScheduleTabs()
 bindScheduleNavigation()
 bindListenSection()
 bindPicturesSection()
+bindMediaStrips()
 document.addEventListener('keydown', onMediaOverlayEscape)
