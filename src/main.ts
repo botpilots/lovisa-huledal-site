@@ -250,10 +250,10 @@ const SECTION_TITLE_BASE = 'select-none text-3xl font-light tracking-widest text
 const ABOUT_SECTION_PADDING = 'pt-12 pb-16 md:pt-[3.825rem] md:pb-[5.25rem]'
 const ABOUT_SECTION_TITLE_MARGIN = 'mb-12 md:mb-[4.675rem]'
 const SECTION_CONTENT_STACK = 'space-y-12 md:space-y-[4.25rem]'
-const PICTURES_TAB_BASE =
+const SECTION_TAB_BASE =
   'cursor-pointer select-none border-0 bg-transparent p-0 text-sm tracking-[0.25em] transition-colors'
-const PICTURES_TAB_ACTIVE = 'text-sand-800'
-const PICTURES_TAB_INACTIVE = 'text-gray-400 hover:text-gray-600'
+const SECTION_TAB_ACTIVE = 'text-sand-800'
+const SECTION_TAB_INACTIVE = 'text-gray-400 hover:text-gray-600'
 const PROGRAMME_TABS_CLASS =
   'programme-tabs mb-4 grid w-full shrink-0 py-2 lg:mb-8 lg:py-4'
 
@@ -742,7 +742,7 @@ function renderScheduleEventList(entries: EventEntry[], emptyMessage: string): s
 
 function renderScheduleTabs(active: ScheduleTab): string {
   const tabs: ScheduleTab[] = ['upcoming', 'past']
-  return tabs
+  const buttons = tabs
     .map(
       (id) => `
         <button
@@ -756,7 +756,13 @@ function renderScheduleTabs(active: ScheduleTab): string {
         </button>
       `,
     )
-    .join('')
+    .join('<span class="section-tabs__sep" aria-hidden="true">|</span>')
+
+  return `
+    <div class="section-tabs" role="tablist">
+      ${buttons}
+    </div>
+  `
 }
 
 function renderScheduleSection(): string {
@@ -781,19 +787,15 @@ function renderScheduleSection(): string {
   return `
     <section id="calendar" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-5xl">
-        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">CALENDAR</h2>
         <div data-calendar-root data-active-tab="${active}">
-          <div
-            class="${PROGRAMME_TABS_CLASS} mx-auto max-w-md"
-            role="tablist"
-            style="grid-template-columns: repeat(2, minmax(0, 1fr))"
-          >
+          <div class="section-intro">
+            <h2 class="section-intro__title text-center ${SECTION_TITLE_BASE}">CALENDAR</h2>
             ${renderScheduleTabs(active)}
           </div>
-          <div data-calendar-panel="upcoming" class="calendar-panel">
+          <div data-calendar-panel="upcoming" class="calendar-panel" role="tabpanel">
             ${renderScheduleEventList(upcoming, 'No upcoming performances.')}
           </div>
-          <div data-calendar-panel="past" class="calendar-panel" hidden>
+          <div data-calendar-panel="past" class="calendar-panel" role="tabpanel" hidden>
             ${renderScheduleEventList(past, 'No past performances.')}
           </div>
         </div>
@@ -882,8 +884,12 @@ const SCHEDULE_TAB_LABELS: Record<ScheduleTab, string> = {
   past: 'PAST',
 }
 
+function sectionTabButtonClass(isActive: boolean): string {
+  return `${SECTION_TAB_BASE} ${isActive ? SECTION_TAB_ACTIVE : SECTION_TAB_INACTIVE}`
+}
+
 function calendarTabButtonClass(tab: ScheduleTab, active: ScheduleTab): string {
-  return tabButtonClass(tab === active)
+  return sectionTabButtonClass(tab === active)
 }
 
 const PROGRAMME_TAB_LABELS: Record<ProgrammeTab, string> = {
@@ -1304,8 +1310,7 @@ function renderPictureThumbnail(entry: PhotoEntry): string {
 }
 
 function picturesTabButtonClass(category: PhotoCategory, active: PhotoCategory): string {
-  const isActive = category === active
-  return `${PICTURES_TAB_BASE} ${isActive ? PICTURES_TAB_ACTIVE : PICTURES_TAB_INACTIVE}`
+  return sectionTabButtonClass(category === active)
 }
 
 function renderPicturesTabs(active: PhotoCategory): string {
@@ -1321,10 +1326,10 @@ function renderPicturesTabs(active: PhotoCategory): string {
         ${PHOTO_CATEGORY_LABELS[id]}
       </button>
     `,
-  ).join('<span class="pictures-tabs__sep" aria-hidden="true">|</span>')
+  ).join('<span class="section-tabs__sep" aria-hidden="true">|</span>')
 
   return `
-    <div class="pictures-tabs" role="tablist">
+    <div class="section-tabs" role="tablist">
       ${tabs}
     </div>
   `
@@ -1361,7 +1366,10 @@ function renderPicturesGallery(): string {
 
   return `
     <div data-pictures-root data-active-tab="${active}">
-      ${renderPicturesTabs(active)}
+      <div class="section-intro">
+        <h2 class="section-intro__title text-center ${SECTION_TITLE_BASE}">PICTURES</h2>
+        ${renderPicturesTabs(active)}
+      </div>
       ${PHOTO_CATEGORIES.map((category) => renderPicturesPanel(category, active)).join('')}
     </div>
   `
@@ -1391,10 +1399,16 @@ function renderPicturesDetailShell(): string {
 }
 
 function renderPicturesSection(): string {
+  const hasPhotos = photoEntries.length > 0
+
   return `
     <section id="pictures" class="bg-sand-50 px-6 ${SECTION_PADDING_Y}">
       <div class="mx-auto max-w-7xl">
-        <h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">PICTURES</h2>
+        ${
+          hasPhotos
+            ? ''
+            : `<h2 class="${SECTION_TITLE_MARGIN} text-center ${SECTION_TITLE_BASE}">PICTURES</h2>`
+        }
         <div data-pictures-gallery-root>
           ${renderPicturesGallery()}
         </div>
@@ -1574,7 +1588,7 @@ function bindMediaStrips(): void {
 }
 
 const CONTACT_LINK_CLASS =
-  'text-gray-800 underline decoration-gray-400/80 underline-offset-4 transition-colors hover:text-gray-950'
+  'underline underline-offset-4 transition-colors'
 
 function telHref(phone: string): string {
   const normalized = phone.trim().replace(/[^\d+]/g, '')
@@ -1647,19 +1661,21 @@ function renderContactSection(): string {
         decoding="async"
       />
       <div class="contact-section__panel">
-        <h2 id="contact-heading" class="contact-section__title">CONTACT</h2>
-        <p class="contact-section__intro">Lovisa Huledal is represented by</p>
-        <div class="contact-section__block">
-          <p class="contact-section__label">ELIASSON ARTISTS STOCKHOLM</p>
-          <p class="contact-section__person">${escapeHtml(agencyName)}</p>
-          ${agencyLines ? `<p class="contact-section__details">${agencyLines}</p>` : ''}
-        </div>
-        <div class="contact-section__block">
-          <p class="contact-section__intro">
-            If you wish to come in contact with Lovisa herself, please use the information below:
-          </p>
-          ${lovisaEmail ? `<p class="contact-section__details">${lovisaEmail}</p>` : ''}
-          ${renderContactSocialLinks()}
+        <div class="contact-section__card">
+          <h2 id="contact-heading" class="contact-section__title">CONTACT</h2>
+          <p class="contact-section__intro">Lovisa Huledal is represented by</p>
+          <div class="contact-section__block">
+            <p class="contact-section__label">ELIASSON ARTISTS STOCKHOLM</p>
+            <p class="contact-section__person">${escapeHtml(agencyName)}</p>
+            ${agencyLines ? `<p class="contact-section__details">${agencyLines}</p>` : ''}
+          </div>
+          <div class="contact-section__block">
+            <p class="contact-section__intro">
+              If you wish to come in contact with Lovisa herself, please use the information below:
+            </p>
+            ${lovisaEmail ? `<p class="contact-section__details">${lovisaEmail}</p>` : ''}
+            ${renderContactSocialLinks()}
+          </div>
         </div>
       </div>
     </section>
