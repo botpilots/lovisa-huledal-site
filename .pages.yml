@@ -258,9 +258,9 @@ content:
         label: Title
         type: string
 
-      - name: headerColor
-        label: Header colour
-        description: Optional. Background for the title band (or full media area when there is no image). Leave empty to use the next sand tone from the site theme — each programme gets a different colour until the palette cycles.
+      - name: color
+        label: Programme colour
+        description: Accent for the title band, open panel tint, events sub-banner, and image carousel. Leave empty to auto-assign from the Scandinavian palette (dark green, red, blue, gold). Hex or rgb, e.g. #345a75.
         type: color
 
       - name: description

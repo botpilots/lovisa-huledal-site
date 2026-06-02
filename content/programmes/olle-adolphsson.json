@@ -1,12 +1,12 @@
 {
   "title": "Olle Adolphsson",
-  "headerColor": "#715b43",
+  "color": "#345a75",
   "description": "**Test:** bild + CMS-färg + flikarna DESCRIPTION och REPERTOIRE.\n\nLorem ipsum osvosvosvosv Lorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosv\n\n- Lorem ipsum osvosvosvosv\n- -\n- Lorem ipsum osvosvosvosv\n\n",
   "images": [
     {
       "image": "/media/jolo-mb-3909.jpeg",
       "offsetX": 55,
-      "offsetY": 25
+      "offsetY": 80
     },
     {
       "image": "/media/jolo-mb-4134.jpeg",
