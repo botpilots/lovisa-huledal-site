@@ -72,6 +72,7 @@ html {
   font-size: var(--font-site-nav-size, 0.75rem);
   letter-spacing: 0.025em;
   color: rgb(229 231 235);
+  user-select: none;
 }
 
 @media (min-width: 40rem) {
@@ -135,6 +136,7 @@ body {
   transform: translate(-50%, -50%);
   text-align: center;
   white-space: nowrap;
+  user-select: none;
 }
 
 @media (min-width: 48rem) {
