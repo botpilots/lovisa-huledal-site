@@ -1,0 +1,51 @@
+{
+  "title": "Aubade",
+  "description": "Ett program med musik av kompositören och visdiktaren Olle Adolphson tolkade av duo Huledal Martling där  Lovisa samarbetar med lutenisten och äkta maken John Martling. Programmet tillkom som svar på en inbjudan från Olle Adolphson-sällskapet och hade premiär 2025 på Teater Tre i Stockholm med ett mycket varmt mottagande. \n\nLovisa och John träffades 2022 och har spelat och sjungit tillsammans sedan dess. De delar nyfikenheten och kärleken till musiken samt en intuitiv, inlyssnande musikalitet som genomsyrar allt de gör, från madrigaler till opera, visor och nyskrivna verk. \n\nLutenisten **John Martling** från Stockholm började sina studier på Kungliga musikhögskolan och fortsatte sedan på Schola Cantorum i Basel, Schweiz där han utbildade sig med både en kandidatexamen och två masterexamina inom tidig musik. Han spelar barock- och renässansluta, ärkeluta samt teorb och har en särskild specialisering i vokalmusik från renässansen. John är en mycket uppskattad solist och ackompanjatör, och arbetar regelbundet med barockorkestrar i Sverige och internationellt samt i flera mindre ensembler. John spelar även nutida musik och arrangerar musik från andra genrer för luta och sjunger också själv. Sommaren 2025 var han musikalisk ledare i Monteverdis opera Poppeas kröning i Vattnäs konsertlada. \n\n*Aubade* är franska och betyder “morgonserenad” och beskriver en sång eller instrumentalkomposition som \"beskriver, beledsagar eller besvärjer gryningen\" och är även namnet på Olle Adolphsons första vissamling. Uttrycket Aubade har kopplingar till medeltidens *touvèrer,* eller trubadurer som de har kommit att kallas. Olle Adolphson influerades själv mycket av renässansens och barockens musik och lyrik, och kanske särskild just musiken kring medeltidens trubadurer, något som bland annat är extra tydligt i hans första vissamling. Detta är något som vi  valt att lyfta fram i “Aubade” där man får höra Olles egna varianter på folía, aubade, serenader och riddarvisor, vissa välkända, andra nya bekantskaper. Men alltid med hans omisskännliga musikalitet och känsla för stämningar i texten.  \n\nProgrammet innehåller såväl älskade visklassiker som mer okända sånger, körverk och gitarrmusik från hela Adolphsons produktion.",
+  "images": [
+    {
+      "image": "/media/jolo-mb-3909.jpeg"
+    }
+  ],
+  "repertoire": [
+    {
+      "composer": "O. Adolphson",
+      "piece": "Mitt eget land"
+    },
+    {
+      "composer": "O. Adolphson",
+      "piece": "Aubade"
+    },
+    {
+      "composer": "O. Adolphson",
+      "piece": "Nils Dacke till ära"
+    },
+    {
+      "composer": "O. Aldolphson",
+      "piece": "Riddaren utav Burgund"
+    },
+    {
+      "composer": "O. Adolphson",
+      "piece": "Okända djur"
+    },
+    {
+      "composer": "O. Adolphson",
+      "piece": "Duvan och vallmon"
+    },
+    {
+      "composer": "O. Adolphson",
+      "piece": "Aria\t"
+    },
+    {
+      "composer": "O. Adolphson",
+      "piece": "Siv och Gunne"
+    },
+    {
+      "composer": "O. Adolphson",
+      "piece": "Fågelsång"
+    },
+    {
+      "composer": "E. Grieg (arr. O. Adolphson)",
+      "piece": "Våren (E. Grieg, arr. Adolphson)"
+    }
+  ]
+}
