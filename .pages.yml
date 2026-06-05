@@ -474,17 +474,21 @@ content:
     type: collection
     path: content/events
     format: json
-    filename: "{date}-{name}.json"
+    filename: "{fields.dates}-{name}.json"
     view:
       primary: name
-      sort: [date]
+      sort: [dates]
       default:
-        sort: date
+        sort: dates
         order: desc
     fields:
-      - name: date
-        label: Date
+      - name: dates
+        label: Dates
+        description: One or more performance dates. Each date appears as a separate listing on the website.
         type: date
+        list:
+          min: 1
+          collapsible: true
 
       - name: time
         label: Time of Day

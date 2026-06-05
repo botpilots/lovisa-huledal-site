@@ -74,6 +74,16 @@ interface ProgrammeEntry {
   programme: Programme
 }
 
+interface EventFile {
+  dates?: string[]
+  time?: string
+  name?: string
+  location?: string
+  description?: string
+  link?: string
+  programme?: string
+}
+
 interface Event {
   date: string
   time?: string
@@ -189,10 +199,41 @@ const programmeEntries: ProgrammeEntry[] = Object.entries(programmeModules)
 
 const programmeHeaderColors = assignProgrammeHeaderColors(programmeEntries)
 
-const eventModules = import.meta.glob<Event>('../content/events/*.json', {
+const eventModules = import.meta.glob<EventFile>('../content/events/*.json', {
   eager: true,
   import: 'default',
 })
+
+function normalizeEventDates(source: EventFile): string[] {
+  const fromList = source.dates?.map((d) => d.trim()).filter(Boolean) ?? []
+  if (fromList.length > 0) return [...fromList].sort()
+  const legacy = source.date?.trim()
+  return legacy ? [legacy] : []
+}
+
+function buildEventEntries(modules: Record<string, EventFile>): EventEntry[] {
+  const entries: EventEntry[] = []
+
+  for (const [filePath, source] of Object.entries(modules)) {
+    const sourceId = eventIdFromGlob(filePath)
+    const path = cmsPathFromGlob(filePath)
+    const dates = normalizeEventDates(source)
+    if (dates.length === 0) continue
+
+    const { date: _legacyDate, dates: _dates, ...shared } = source
+
+    for (const date of dates) {
+      const id = dates.length === 1 ? sourceId : `${sourceId}--${date}`
+      entries.push({
+        id,
+        path,
+        event: { ...shared, date },
+      })
+    }
+  }
+
+  return entries
+}
 
 const videoModules = import.meta.glob<Video>('../content/videos/*.json', {
   eager: true,
@@ -233,20 +274,11 @@ function buildPhotoEntries(content: PhotosContent): PhotoEntry[] {
 
 const photoEntries = buildPhotoEntries(photosContent as PhotosContent)
 
-const eventEntries: EventEntry[] = Object.entries(eventModules)
-  .map(([filePath, event]) => {
-    const id = eventIdFromGlob(filePath)
-    return {
-      id,
-      path: cmsPathFromGlob(filePath),
-      event,
-    }
-  })
-  .sort(
-    (a, b) =>
-      a.event.date.localeCompare(b.event.date) ||
-      (a.event.time ?? '').localeCompare(b.event.time ?? ''),
-  )
+const eventEntries: EventEntry[] = buildEventEntries(eventModules).sort(
+  (a, b) =>
+    a.event.date.localeCompare(b.event.date) ||
+    (a.event.time ?? '').localeCompare(b.event.time ?? ''),
+)
 
 const BIOGRAPHY_PROSE =
   'biography-prose text-lg font-light leading-relaxed text-gray-600 [&_h5]:text-lg [&_h5]:font-normal [&_h5]:text-gray-900 [&_h5]:mb-6 [&_p]:mb-6 [&_p:last-child]:mb-0 [&_em]:italic [&_ul]:mb-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2'
