@@ -454,19 +454,7 @@ content:
 
       - name: repertoire
         label: Repertoire
-        type: object
-        list:
-          collapsible:
-            collapsed: true
-            summary: "{composer} - {piece}"
-        fields:
-          - name: composer
-            label: Composer
-            type: string
-
-          - name: piece
-            label: Piece
-            type: string
+        type: rich-text
 
   # EVENTS
   - name: events

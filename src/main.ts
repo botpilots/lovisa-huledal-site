@@ -35,11 +35,6 @@ interface HomeContent {
   aboutMosaic: MosaicImage[]
 }
 
-interface ProgrammeRepertoireEntry {
-  composer: string
-  piece: string
-}
-
 interface ProgrammeImage {
   image?: string
   offsetX?: number
@@ -56,7 +51,7 @@ interface Programme {
   images?: (string | ProgrammeImage)[]
   /** @deprecated Legacy single image — use `images` list */
   image?: ProgrammeImage
-  repertoire?: ProgrammeRepertoireEntry[]
+  repertoire?: string
 }
 
 /** Scandinavian accent bands for programmes without a CMS colour. */
@@ -655,31 +650,16 @@ function renderProgrammeCarouselDotsBar(count: number): string {
   `
 }
 
-function renderProgrammeRepertoireList(entries: ProgrammeRepertoireEntry[]): string {
-  const items = entries
-    .map(
-      (entry) => `
-        <li class="break-inside-avoid text-left">
-          <span class="text-gray-900">${entry.composer}</span>
-          <span class="text-gray-600"> — <span class="italic">${entry.piece}</span></span>
-        </li>
-      `,
-    )
-    .join('')
-
-  return `<ul class="programme-accordion-repertoire__list">${items}</ul>`
-}
-
-function renderProgrammeRepertoireSection(
-  entries: ProgrammeRepertoireEntry[],
-  headingId: string,
-): string {
-  if (!entries.length) return ''
+function renderProgrammeRepertoireSection(markdown: string, headingId: string): string {
+  const trimmed = markdown.trim()
+  if (!trimmed) return ''
 
   return `
     <section class="programme-accordion-repertoire" aria-labelledby="${headingId}">
       <h3 id="${headingId}" class="programme-accordion-repertoire__title">Repertoire</h3>
-      ${renderProgrammeRepertoireList(entries)}
+      <div class="programme-accordion-repertoire__content ${PROGRAMME_DESCRIPTION_PROSE}">
+        ${renderMarkdown(trimmed)}
+      </div>
     </section>
   `
 }
@@ -1081,7 +1061,7 @@ function populateProgrammeDetail(entry: ProgrammeEntry): void {
   descriptionEl.innerHTML = renderMarkdown(programme.description)
 
   const repertoireIndex = programmeEntries.indexOf(entry)
-  repertoireEl.innerHTML = programme.repertoire?.length
+  repertoireEl.innerHTML = programme.repertoire?.trim()
     ? renderProgrammeRepertoireSection(
         programme.repertoire,
         `programme-detail-repertoire-${repertoireIndex}`,

@@ -14,14 +14,5 @@
       "offsetY": 40
     }
   ],
-  "repertoire": [
-    { "composer": "Olle Adolphsson", "piece": "Nu ska vi op och norra" },
-    { "composer": "Olle Adolphsson", "piece": "Trubbel" },
-    { "composer": "Olle Adolphsson", "piece": "Följa med" },
-    { "composer": "Olle Adolphsson", "piece": "Det går an" },
-    { "composer": "Olle Adolphsson", "piece": "Gustafssons fantasier" },
-    { "composer": "Olle Adolphsson", "piece": "Sigge Skoog och hans kompisar" },
-    { "composer": "Olle Adolphsson", "piece": "Visa om vår herre och hans fru" },
-    { "composer": "Olle Adolphsson", "piece": "Okända djur" }
-  ]
+  "repertoire": "- Olle Adolphsson — *Nu ska vi op och norra*\n- Olle Adolphsson — *Trubbel*\n- Olle Adolphsson — *Följa med*\n- Olle Adolphsson — *Det går an*\n- Olle Adolphsson — *Gustafssons fantasier*\n- Olle Adolphsson — *Sigge Skoog och hans kompisar*\n- Olle Adolphsson — *Visa om vår herre och hans fru*\n- Olle Adolphsson — *Okända djur*"
 }

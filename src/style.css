@@ -577,17 +577,14 @@ body {
   color: var(--color-gray-900);
 }
 
-.programme-accordion-repertoire__list {
+.programme-accordion-repertoire__content ul {
   display: grid;
   gap: 0.5rem 2.5rem;
   text-align: left;
-  font-size: 1rem;
-  font-weight: 300;
-  line-height: 1.625;
 }
 
 @media (min-width: 640px) {
-  .programme-accordion-repertoire__list {
+  .programme-accordion-repertoire__content ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
