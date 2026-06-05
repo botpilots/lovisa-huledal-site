@@ -44,7 +44,9 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          # Custom domain serves from site root (e.g. lovisahuledal.com/assets/…).
+          # Override in repo Settings → Variables: VITE_BASE_PATH=/repo-name/ for github.io project URL only.
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || '/' }}
         
       - name: Setup Pages
         uses: actions/configure-pages@v5
