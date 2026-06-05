@@ -1577,29 +1577,55 @@ function bindListenSection(): void {
   })
 }
 
+const MEDIA_STRIP_SCROLL_SLOP = 4
+
 function mediaStripCardScrollLeft(viewport: HTMLElement, card: HTMLElement): number {
   return card.getBoundingClientRect().left - viewport.getBoundingClientRect().left + viewport.scrollLeft
 }
 
-function scrollMediaStripByCard(viewport: HTMLElement, direction: -1 | 1): void {
+function mediaStripCards(viewport: HTMLElement): HTMLElement[] {
   const grid = viewport.firstElementChild
-  if (!grid) return
+  if (!grid) return []
+  return Array.from(grid.children).filter((node): node is HTMLElement => node instanceof HTMLElement)
+}
 
-  const cards = Array.from(grid.children).filter((node): node is HTMLElement => node instanceof HTMLElement)
+function mediaStripScrollExtents(viewport: HTMLElement): { atStart: boolean; atEnd: boolean } {
+  const cards = mediaStripCards(viewport)
+  if (!cards.length) return { atStart: true, atEnd: true }
+
+  const scrollLeft = viewport.scrollLeft
+  const viewportRight = scrollLeft + viewport.clientWidth
+  const slop = MEDIA_STRIP_SCROLL_SLOP
+
+  let contentLeft = Infinity
+  let contentRight = 0
+  for (const card of cards) {
+    const left = mediaStripCardScrollLeft(viewport, card)
+    contentLeft = Math.min(contentLeft, left)
+    contentRight = Math.max(contentRight, left + card.offsetWidth)
+  }
+
+  return {
+    atStart: scrollLeft <= contentLeft + slop,
+    atEnd: contentRight <= viewportRight + slop,
+  }
+}
+
+function scrollMediaStripByCard(viewport: HTMLElement, direction: -1 | 1): void {
+  const cards = mediaStripCards(viewport)
   if (!cards.length) return
 
   const scrollLeft = viewport.scrollLeft
-  const slop = 4
 
   if (direction > 0) {
-    const next = cards.find((card) => mediaStripCardScrollLeft(viewport, card) > scrollLeft + slop)
+    const next = cards.find((card) => mediaStripCardScrollLeft(viewport, card) > scrollLeft + MEDIA_STRIP_SCROLL_SLOP)
     if (next) {
       viewport.scrollTo({ left: mediaStripCardScrollLeft(viewport, next), behavior: 'smooth' })
     }
     return
   }
 
-  const prev = [...cards].reverse().find((card) => mediaStripCardScrollLeft(viewport, card) < scrollLeft - slop)
+  const prev = [...cards].reverse().find((card) => mediaStripCardScrollLeft(viewport, card) < scrollLeft - MEDIA_STRIP_SCROLL_SLOP)
   if (prev) {
     viewport.scrollTo({ left: mediaStripCardScrollLeft(viewport, prev), behavior: 'smooth' })
   }
@@ -1612,9 +1638,10 @@ function updateMediaStripNav(strip: HTMLElement): void {
   if (!viewport || !prev || !next) return
 
   const maxScroll = viewport.scrollWidth - viewport.clientWidth
-  const overflow = maxScroll > 1
-  prev.disabled = viewport.scrollLeft <= 1
-  next.disabled = viewport.scrollLeft >= maxScroll - 1
+  const overflow = maxScroll > MEDIA_STRIP_SCROLL_SLOP
+  const { atStart, atEnd } = mediaStripScrollExtents(viewport)
+  prev.disabled = atStart
+  next.disabled = atEnd
   prev.hidden = !overflow
   next.hidden = !overflow
 }
@@ -1677,6 +1704,7 @@ function bindMediaStrips(): void {
     prev.addEventListener('click', () => scrollMediaStripByCard(viewport, -1))
     next.addEventListener('click', () => scrollMediaStripByCard(viewport, 1))
     viewport.addEventListener('scroll', updateNav, { passive: true })
+    viewport.addEventListener('scrollend', updateNav, { passive: true })
     if (typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(updateNav).observe(viewport)
     } else {
