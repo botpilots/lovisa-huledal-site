@@ -201,9 +201,7 @@ const eventModules = import.meta.glob<EventFile>('../content/events/*.json', {
 
 function normalizeEventDates(source: EventFile): string[] {
   const fromList = source.dates?.map((d) => d.trim()).filter(Boolean) ?? []
-  if (fromList.length > 0) return [...fromList].sort()
-  const legacy = source.date?.trim()
-  return legacy ? [legacy] : []
+  return fromList.length > 0 ? [...fromList].sort() : []
 }
 
 function buildEventEntries(modules: Record<string, EventFile>): EventEntry[] {
@@ -215,7 +213,7 @@ function buildEventEntries(modules: Record<string, EventFile>): EventEntry[] {
     const dates = normalizeEventDates(source)
     if (dates.length === 0) continue
 
-    const { date: _legacyDate, dates: _dates, ...shared } = source
+    const { dates: _dates, ...shared } = source
 
     for (const date of dates) {
       const id = dates.length === 1 ? sourceId : `${sourceId}--${date}`
