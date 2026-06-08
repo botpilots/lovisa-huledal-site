@@ -70,7 +70,9 @@ interface ProgrammeEntry {
 }
 
 interface EventFile {
-  dates?: string[]
+  date?: string
+  slug?: string
+  extraDates?: string[]
   time?: string
   name?: string
   location?: string
@@ -200,8 +202,10 @@ const eventModules = import.meta.glob<EventFile>('../content/events/*.json', {
 })
 
 function normalizeEventDates(source: EventFile): string[] {
-  const fromList = source.dates?.map((d) => d.trim()).filter(Boolean) ?? []
-  return fromList.length > 0 ? [...fromList].sort() : []
+  const primary = source.date?.trim()
+  const extras = source.extraDates?.map((d) => d.trim()).filter(Boolean) ?? []
+  const all = [primary, ...extras].filter((d): d is string => Boolean(d))
+  return all.length > 0 ? [...new Set(all)].sort() : []
 }
 
 function buildEventEntries(modules: Record<string, EventFile>): EventEntry[] {
@@ -213,7 +217,7 @@ function buildEventEntries(modules: Record<string, EventFile>): EventEntry[] {
     const dates = normalizeEventDates(source)
     if (dates.length === 0) continue
 
-    const { dates: _dates, ...shared } = source
+    const { date: _date, slug: _slug, extraDates: _extraDates, ...shared } = source
 
     for (const date of dates) {
       const id = dates.length === 1 ? sourceId : `${sourceId}--${date}`

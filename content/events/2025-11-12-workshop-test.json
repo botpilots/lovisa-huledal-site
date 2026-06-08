@@ -1,5 +1,6 @@
 {
-  "dates": ["2025-11-12"],
+  "date": "2025-11-12",
+  "slug": "workshop-test",
   "time": "18.00",
   "name": "Workshop — testkörning",
   "programme": "content/programmes/workshop-test.json"

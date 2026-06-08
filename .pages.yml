@@ -430,20 +430,29 @@ content:
     type: collection
     path: content/events
     format: json
-    filename: "{fields.dates}-{name}.json"
+    filename: "{date}-{slug}.json"
     view:
       primary: name
-      sort: [dates]
+      sort: [date, name]
       default:
-        sort: dates
+        sort: date
         order: desc
     fields:
-      - name: dates
-        label: Dates
-        description: One or more performance dates. Each date appears as a separate listing on the website.
+      - name: date
+        label: Date
+        description: Primary performance date. Used in the filename and listed first on the website.
+        type: date
+
+      - name: slug
+        label: Slug
+        description: Short id for the filename when titles repeat, e.g. bastad-kyrka or matinee. Saved as {date}-{slug}.json.
+        type: string
+
+      - name: extraDates
+        label: Extra dates
+        description: Additional performance dates. Each appears as a separate listing on the website.
         type: date
         list:
-          min: 1
           collapsible: true
 
       - name: time

@@ -1,5 +1,6 @@
 {
-  "dates": ["2026-02-14"],
+  "date": "2026-02-14",
+  "slug": "olle-adolphsson-konsert",
   "time": "19.30",
   "name": "Olle Adolphsson — vinterkonsert",
   "programme": "content/programmes/olle-adolphsson.json"
