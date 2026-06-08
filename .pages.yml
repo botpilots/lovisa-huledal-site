@@ -100,10 +100,6 @@ content:
                 description: Optional base text size in rem, e.g. 1 for 1rem.
                 type: number
                 required: false
-                options:
-                  min: 0.5
-                  max: 3
-                  step: 0.125
 
           - name: heroTitle
             label: Hero title
@@ -128,30 +124,18 @@ content:
                 description: Optional size in rem. Also used as fallback when mobile or desktop size is omitted.
                 type: number
                 required: false
-                options:
-                  min: 0.5
-                  max: 6
-                  step: 0.125
 
               - name: fontSizeMobile
                 label: Font size — mobile (rem)
                 description: Below 768px. Default uses responsive clamp.
                 type: number
                 required: false
-                options:
-                  min: 0.5
-                  max: 6
-                  step: 0.125
 
               - name: fontSizeDesktop
                 label: Font size — desktop (rem)
                 description: 768px and wider. Default uses responsive clamp.
                 type: number
                 required: false
-                options:
-                  min: 0.5
-                  max: 6
-                  step: 0.125
 
           - name: heroSubtitle
             label: Hero subtitle
@@ -176,30 +160,18 @@ content:
                 description: Optional size in rem. Also used as fallback when mobile or desktop size is omitted.
                 type: number
                 required: false
-                options:
-                  min: 0.5
-                  max: 6
-                  step: 0.125
 
               - name: fontSizeMobile
                 label: Font size — mobile (rem)
                 description: Below 768px. Default uses responsive clamp.
                 type: number
                 required: false
-                options:
-                  min: 0.5
-                  max: 6
-                  step: 0.125
 
               - name: fontSizeDesktop
                 label: Font size — desktop (rem)
                 description: 768px and wider. Default uses responsive clamp.
                 type: number
                 required: false
-                options:
-                  min: 0.5
-                  max: 6
-                  step: 0.125
 
           - name: siteNav
             label: Hero footer / navigation
@@ -224,10 +196,6 @@ content:
                 description: "Navigation link size. Default 0.75rem (0.875rem from 640px)."
                 type: number
                 required: false
-                options:
-                  min: 0.5
-                  max: 2
-                  step: 0.0625
 
       - name: heroSubtitle
         label: Hero subtitle
