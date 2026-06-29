@@ -1,7 +1,7 @@
 {
-  "title": "Olle Adolphsson",
+  "title": "Aubade",
   "color": "#345a75",
-  "description": "**Test:** bild + CMS-färg + flikarna DESCRIPTION och REPERTOIRE.\n\nLorem ipsum osvosvosvosv Lorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosvLorem ipsum osvosvosvosv\n\n- Lorem ipsum osvosvosvosv\n- -\n- Lorem ipsum osvosvosvosv\n\n",
+  "description": "Lovisa och John träffades 2022 och har spelat och sjungit tillsammans sedan dess. De delar nyfikenheten och kärleken till musiken samt en intuitiv, inlyssnande musikalitet som genomsyrar allt de gör, från madrigaler till opera och nyskrivna verk. \n\n*Aubade* är ett program med musik av kompositören och visdiktaren Olle Adolphson tolkade av Lovisa Huledal och John Martling. Programmet tillkom som svar på en inbjudan från Olle Adolphson-sällskapet och hade premiär 2025 på Teater Tre i Stockholm med ett mycket varmt mottagande. \n\n*Aubade* är franska och betyder “morgonserenad” och beskriver en sång eller instrumentalkomposition som \"beskriver, beledsagar eller besvärjer gryningen\" och är även namnet på Olle Adolphsons första vissamling. Uttrycket Aubade har kopplingar till medeltidens *touvèrer,* eller trubadurer som de har kommit att kallas. Olle Adolphson influerades själv mycket av renässansens och barockens musik och lyrik, och kanske särskild just musiken kring medeltidens trubadurer, något som bland annat är extra tydligt i hans första vissamling. Detta är något som vi  valt att lyfta fram i “Aubade” där man får höra Olles egna varianter på folía, aubade, serenader och riddarvisor, vissa välkända, andra nya bekantskaper. Men alltid med hans omisskännliga musikalitet och känsla för stämningar i texten.  \n\nProgrammet innehåller såväl älskade visklassiker som mer okända sånger, körverk och gitarrmusik från hela Adolphsons produktion.\n\n",
   "images": [
     {
       "image": "/media/jolo-mb-3909.jpeg",
@@ -14,5 +14,5 @@
       "offsetY": 40
     }
   ],
-  "repertoire": "- Olle Adolphsson — *Nu ska vi op och norra*\n- Olle Adolphsson — *Trubbel*\n- Olle Adolphsson — *Följa med*\n- Olle Adolphsson — *Det går an*\n- Olle Adolphsson — *Gustafssons fantasier*\n- Olle Adolphsson — *Sigge Skoog och hans kompisar*\n- Olle Adolphsson — *Visa om vår herre och hans fru*\n- Olle Adolphsson — *Okända djur*"
+  "repertoire": "- Mitt eget land\t\n- Aubade\n- Nils Dacke till ära\n- Riddaren utav Burgund\n- Okända djur\n- Duvan och vallmon\n- Aria\n- Siv och Gunne\n- Fågelsång\n- Våren (E. Grieg, arr. Adolphson)\n- La Follia (Corelli) \n- Folia (Rim i juli)\n- Skeppsholmens kyrkklockor\n- Trubbel\n- Om natten är alla änkor grå\n- Nu har jag fått den jag vill ha\n- Drottning Blanka Maria\n- Innsbruck, ich muss dich lassen\n- Ett litet barn dansar\n- Det gåtfulla folket\n- Nu kommer kvällen\n\n  \n\n\n"
 }
