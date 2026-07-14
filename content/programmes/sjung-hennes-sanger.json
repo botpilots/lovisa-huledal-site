@@ -1,12 +1,12 @@
 {
   "title": "Sjung hennes sånger!",
+  "description": "En romanskonsert med Lovisa Huledal och pianisten Filip Michalak, som presenterar musik uteslutande av kvinnliga kompositörer och berättar historien om Sveriges kvinnliga kompositörer samt de musikaliska och sociala banden till deras samtida kollegor ute i Europa. Musik av Ridderstolpe, Hensel Mendelssohn, Schumann, Viardot, Netzel, Andrée, Munktell, Chaminade, Mahler, Tengér och Boulanger.\n\nLovisa och Filip lärde känna varandra under studietiden på Kungl. musikhögskolan där de tidigt upptäckte att deras musikaliska språk och ambitioner på samma gång lyfte och utmanade varandra. Sedan 2019 har de framträtt tillsammans med olika romansprogram runt om i Norden. \n\n*”Ett litet genidrag till konsert!... Lovisa Huledal skapar ett emotionellt, förtätat, intimt rum som verkar lika förföriskt som musiken som interpreteras. Till detta måste tilläggas hennes vackra röst, framtoning och utstrålning. Filip Michalak levererade ett exemplariskt, lojalt och samspelt ackompanjemang” *  \n*Recension i Kulturen.nu 2024*\n\nProgrammet är indelat i tre avdelningar där varje del presenterar en eller flera svenska kompositörer tillsammans med samtida kollegor i Europa. Publiken bjuds in i ett intimt rum där de växlande får höra berättelser om tiden och kompositörerna samt deras för många okända, men mycket vackra, musik. Programlängd ca 1 timme och 20 minuter inklusive presentationer.",
   "images": [
-	{
-		"image": "/media/20240920-5.jpeg",
-		"offsetX": 50,
-		"offsetY": 80
-	}
+    {
+      "image": "/media/20240920-5.jpeg",
+      "offsetX": 50,
+      "offsetY": 80
+    }
   ],
-  "description": "**Test:** ingen bild + alla tre flikar (DESCRIPTION, REPERTOIRE, UPCOMING).\n\n\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"\n\n- Lorem ipso\n- Lorem ipso\n- Hofof\n- Jdjd\n- Lolo\n\n\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"",
-  "repertoire": "- Alice Tegnér — *Bäckaslöv*\n- Lille Bror Söderlundh — *Jag vet en dejlig rosa*\n- Monica Dominique — *Sång till friheten*\n- Ebba Grön — *Ung och stolt*\n- Marie Bergman — *Ingen vind, ingen våg*\n- Carola Häggkvist — *Fångad av en stormvind*\n- Lena Willemark — *Näcken polska*\n- Eva Dahlgren — *Ängeln i rummet*"
+  "repertoire": "Caroline Ridderstolpe (1793-1878)   \n*Suleika*  \n*Balders Bål*  \n*Fritiofs frestelse*\n\nFanny Hensel Mendelssohn (1805-1847)  \n*Die Mainacht*\n\nClara Schumann (1819 - 1896)  \n*Ich stand in dunkle träumen*  \n*Sie liebten sich beide*  \n*Lorelei*\n\nPauline Viardot (1821 - 1910)  \n*Plainte de amour*  \n*Lamento - la chanson de pêcheur*\n\nLaura Netzel (1839 - 1927)  \n*Rapelle-toi*  \n*Je pense a toi*  \n*I natten*\n\nElfrida Andrée (1841 - 1929)  \n*En vacker höstdag*\n\nHelena Munktell (1852 - 1919)  \n*Sérenade*  \n*Exil d’amour (Avsked)*\n\nCecile Chaminade (1857-1944)  \n*Chanson triste: Dans les profondes mers*  \n*Espoir*\n\nNadia Boulanger (1887 - 1979)  \n*Le couteau*\n\nAlma Mahler (1879 - 1964)  \n*Die Stille Stadt*  \n*Laue Sommernacht*\n\nAlice Tegnér (1864 - 1943)  \n*Örnen*  \n*Trädet utanför mitt fönster*"
 }
