@@ -1,7 +1,18 @@
 {
   "date": "2026-07-30",
   "slug": "la-liberazione",
-  "time": "19.00",
+  "extraDates": [
+    "2026-08-01",
+    "2026-08-02",
+    "2026-08-04",
+    "2026-08-06",
+    "2026-08-08",
+    "2026-08-09",
+    "2026-08-11",
+    "2026-08-13",
+    "2026-08-15",
+    "2026-08-16"
+  ],
   "name": "La Liberazione",
   "location": "Confidencen",
   "description": "Premiere! The summer of 2026 some of Sweden's best baroque singers enter Confidencen's stage in Francesca Caccini's *La liberazione di Ruggiero dall’isola d’Alcina* (1625). Lovisa Huledal sings the role of *Nunzia*. Singing are also: Ann Hallenberg, Kristina Hammarström, Martin Vanberg, Minna Tägil and Joseph Mossop. \n\nThis year's *Confidencen Opera & Music Festival* is presented in co-operation with *Den Andra Operan* and has the undertitle \"The Female Edition: a celebration to the female composers of opera\".",
