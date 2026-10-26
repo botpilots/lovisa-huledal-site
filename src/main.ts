@@ -676,13 +676,16 @@ function renderExternalLinkIcon(size = 16): string {
   `
 }
 
+const EVENT_PILL_CLASS =
+  'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-sand-400/90 bg-sand-100/90 px-3 py-1 text-xs tracking-widest text-sand-800 transition-colors hover:border-sand-600 hover:bg-sand-200 hover:text-gray-900'
+
 function renderEventTicketsLink(event: Event): string {
   if (!event.link) return ''
 
   return `
     <a
       href="${event.link}"
-      class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sand-400/90 bg-sand-100/90 px-3 py-1 text-xs tracking-widest text-sand-800 transition-colors hover:border-sand-600 hover:bg-sand-200 hover:text-gray-900"
+      class="${EVENT_PILL_CLASS}"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Tickets for ${calendarEventDisplayTitle(event)} (opens in new tab)"
@@ -714,6 +717,15 @@ function renderScheduleEventRow(entry: EventEntry, options?: { collapsed?: boole
   const programmePath = event.programme ?? ''
   const tickets = renderEventTicketsLink(event)
   const collapsedAttrs = options?.collapsed ? ' hidden data-calendar-extra' : ''
+  const description = event.description?.trim() ?? ''
+  const descriptionId = `${calendarEventDomId(id)}-description`
+  const infoButton = description
+    ? `<button type="button" class="${EVENT_PILL_CLASS}" data-calendar-event-info aria-expanded="false" aria-controls="${descriptionId}">SHOW INFO</button>`
+    : ''
+  const actions =
+    infoButton || tickets
+      ? `<span class="flex flex-wrap justify-end gap-1.5">${infoButton}${tickets}</span>`
+      : ''
 
   return `
     <li
@@ -726,13 +738,18 @@ function renderScheduleEventRow(entry: EventEntry, options?: { collapsed?: boole
       <div class="calendar-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 text-lg font-light leading-relaxed md:gap-x-10">
         <div class="flex flex-col items-end gap-y-2">
           <time datetime="${event.date}" class="text-right tracking-wide text-sand-800">${formatEventWhen(event)}</time>
-          ${tickets ? `<span class="flex justify-end">${tickets}</span>` : ''}
+          ${actions}
         </div>
         <span class="self-center text-sand-400" aria-hidden="true">—</span>
         <span class="min-w-0 text-left">
           ${renderScheduleEventDetails(event)}
         </span>
       </div>
+      ${
+        description
+          ? `<div id="${descriptionId}" class="mx-auto mt-3 max-w-4xl text-base font-light leading-relaxed text-gray-600 [&_em]:italic [&_p+p]:mt-3" data-calendar-event-description hidden>${renderMarkdown(description)}</div>`
+          : ''
+      }
     </li>
   `
 }
@@ -1646,6 +1663,7 @@ function updateMediaStripNav(strip: HTMLElement): void {
   next.disabled = atEnd
   prev.hidden = !overflow
   next.hidden = !overflow
+  strip.classList.toggle('media-strip--fit', !overflow)
 }
 
 function applyPicturesTab(root: HTMLElement, tab: PhotoCategory): void {
@@ -2085,6 +2103,20 @@ function navigateToProgrammeSchedule(programmePath: string): void {
   else window.setTimeout(() => highlightScheduleEventsForProgramme(programmePath), 450)
 }
 
+function bindScheduleEventDescriptions(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-calendar-event-info]').forEach((button) => {
+    const descriptionId = button.getAttribute('aria-controls')
+    const description = descriptionId ? document.getElementById(descriptionId) : null
+    if (!description) return
+    button.addEventListener('click', () => {
+      const open = description.hidden
+      description.hidden = !open
+      button.setAttribute('aria-expanded', String(open))
+      button.textContent = open ? 'HIDE INFO' : 'SHOW INFO'
+    })
+  })
+}
+
 function bindScheduleShowMore(): void {
   document.querySelectorAll<HTMLButtonElement>('[data-calendar-show-more]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -2271,6 +2303,7 @@ bindProgrammeCarousels()
 bindProgrammesSection()
 bindScheduleTabs()
 bindScheduleShowMore()
+bindScheduleEventDescriptions()
 bindScheduleNavigation()
 bindListenSection()
 bindPicturesSection()
