@@ -679,6 +679,9 @@ function renderExternalLinkIcon(size = 16): string {
 const EVENT_PILL_CLASS =
   'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-sand-400/90 bg-sand-100/90 px-3 py-1 text-xs tracking-widest text-sand-800 transition-colors hover:border-sand-600 hover:bg-sand-200 hover:text-gray-900'
 
+const EVENT_INFO_PILL_CLASS =
+  'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-sand-400/90 bg-white px-3 py-1 text-xs tracking-widest text-sand-800 transition-colors hover:border-sand-600 hover:bg-sand-50'
+
 function renderEventTicketsLink(event: Event): string {
   if (!event.link) return ''
 
@@ -720,11 +723,11 @@ function renderScheduleEventRow(entry: EventEntry, options?: { collapsed?: boole
   const description = event.description?.trim() ?? ''
   const descriptionId = `${calendarEventDomId(id)}-description`
   const infoButton = description
-    ? `<button type="button" class="${EVENT_PILL_CLASS}" data-calendar-event-info aria-expanded="false" aria-controls="${descriptionId}">SHOW INFO</button>`
+    ? `<button type="button" class="${EVENT_INFO_PILL_CLASS}" data-calendar-event-info aria-expanded="false" aria-controls="${descriptionId}">SHOW INFO</button>`
     : ''
   const actions =
     infoButton || tickets
-      ? `<span class="flex flex-wrap justify-end gap-1.5">${infoButton}${tickets}</span>`
+      ? `<div class="col-span-3 row-start-2 flex flex-nowrap justify-center gap-1.5 sm:col-auto sm:row-auto sm:justify-end">${infoButton}${tickets}</div>`
       : ''
 
   return `
@@ -735,13 +738,13 @@ function renderScheduleEventRow(entry: EventEntry, options?: { collapsed?: boole
       data-programme-path="${programmePath}"
       class="calendar-event rounded-sm py-4 md:py-5"${collapsedAttrs}
     >
-      <div class="calendar-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 text-lg font-light leading-relaxed md:gap-x-10">
-        <div class="flex flex-col items-end gap-y-2">
-          <time datetime="${event.date}" class="text-right tracking-wide text-sand-800">${formatEventWhen(event)}</time>
+      <div class="calendar-event-row mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-x-5 gap-y-2 text-lg font-light leading-relaxed md:gap-x-10">
+        <div class="flex flex-col items-end gap-y-2 max-sm:contents">
+          <time datetime="${event.date}" class="justify-self-end text-right tracking-wide text-sand-800 max-sm:col-start-1 max-sm:row-start-1">${formatEventWhen(event)}</time>
           ${actions}
         </div>
-        <span class="self-center text-sand-400" aria-hidden="true">—</span>
-        <span class="min-w-0 text-left">
+        <span class="self-center text-sand-400 max-sm:col-start-2 max-sm:row-start-1" aria-hidden="true">—</span>
+        <span class="min-w-0 text-left max-sm:col-start-3 max-sm:row-start-1">
           ${renderScheduleEventDetails(event)}
         </span>
       </div>
