@@ -710,6 +710,11 @@ body.media-overlay-open {
   min-width: 0;
 }
 
+.media-strip--fit .media-strip__viewport {
+  display: flex;
+  justify-content: center;
+}
+
 .media-strip__nav {
   position: absolute;
   top: 50%;
